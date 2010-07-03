@@ -1,0 +1,4 @@
+RewriteEngine On
+Options +FollowSymlinks
+RewriteRule ^bin/nikolo.cgi - [L]
+RewriteRule ^(.*)$ bin/nikolo.cgi/$1 [L,QSA]

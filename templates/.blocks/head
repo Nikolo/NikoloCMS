@@ -1,0 +1,105 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+[% PROCESS main_style %]
+[% SET request = self.app.session.tx.req %]
+<HTML >
+<HEAD>
+<meta name="description" content="">
+<meta name="keywords" content="">
+<meta name="author" content="Nikolas">
+<link rel="stylesheet" href="/css/nikolo.css" type="text/css">
+<TITLE>[% self.stash.title %]</TITLE>
+</HEAD>
+<BODY>	
+[% SET s = self.stash %]
+<div class="container">
+<div class="logo"><img border=0 src="/images/logo.gif" width="300" height="125" alt="NikoloCMS"></div>
+<div class="header_right">
+        <div class="login">
+            <div class="login_content content">
+[% BLOCK login_block %]
+[% IF s.user %]
+	<table class="LK" width="100%">
+		<tr align="center">
+			<td><form action="/user/edit" method="GET">[% PROCESS button b_type="submit" b_text="Радактировать данные" b_width='90px' %]</form></td>
+                </tr>
+                <tr align="center">
+			<td><form action="/user/logout" method="GET">[% PROCESS button b_type="submit" b_text="Выйти" b_width='76px' %]</form></td>
+		</tr>
+	</table>
+[% ELSE %]
+<form action="/user/auth" method="POST" class="x-form">
+	<table>
+		<tr>
+			<td><label for="login">Имя</label></td>
+			<td colspan=2>
+				<input style="width: 110px;" size="20" id="login" name="login" type="text">
+			</td>
+		</tr>
+		<tr>
+			<td><label for="passwd" style="width: 70px;">Пароль</label></td>
+			<td>
+				<input style="width: 40px;" size="20" id="passwd" name="password" type="password">
+			</td>
+            <td>[% PROCESS button b_type="submit" b_text="Войти" %]</td>
+		</tr>
+	</table>
+</form>
+[% END %]
+
+[% END %]
+                [% PROCESS block_content entry_block='login_block' content_name=(s.user ? 'Управление' : 'Вход в систему') %]
+            </div>
+        </div>
+        <div class="top_menu">
+            <div class="top_menu_content">
+                <a href="/user/registration"><b>Регистрация</b></a>
+                &nbsp|&nbsp
+                <a href="mailto:nikolo@educenter.info">Написать письмо</a>
+                &nbsp|&nbsp
+                <a href="/map">Карта сайта</a>
+            </div>
+        </div>
+        <div class="banner486">
+            <div class="banner486_content"></div>
+        </div>
+</div>
+    <div class="menu">
+        <div class="menu_content content">
+            [% PROCESS menu_tabber items=s.menu %]
+        </div>
+    </div>
+[% BLOCK advert %]
+    <noindex><a href="http://www.sape.ru/r.3c086b0e14.php">SAPE</a></noindex><br>
+    <noindex><a href="http://www.reggi.ru?pid=472">Регистрация доменов</a></noindex><br>
+    [% s.sape.get_links %]
+[% END %]
+    <div class="advert">
+        <div class="advert_content content">
+            [% PROCESS block_content entry_block='advert' content_name='Реклама' %]
+        </div>
+    </div>
+    <div class="main">
+        <div class="main_content content">
+            <table width="99%">
+            [% IF s.warning or s.error or s.result %]
+            <tr><td>
+                <div class='warning'>[% IF s.warning %]<font class='warning'>Предупреждение: [% s.warning %]</font>[% END %]</div>
+                <div class='error'>[% IF s.error %]<font class='error'>Ошибка: [% s.error %]</font>[% END %]</div>
+                <div class='message'>[% IF s.result %]<font class='message'>Сообщение: [% s.result %]</font>[% END %]</div>
+            </td></tr>
+            [% END %]
+[% BLOCK MENU_LINE %]
+	[% FOREACH mlb = s.menu_line_buttons %]
+	    <span>[% PROCESS button_no_center b_text=mlb.text b_link=mlb.link b_type='button' %]</span>
+	[% END %]
+[% END %]
+            <tr><td><div class='submenu'>[% PROCESS submenu %]</div></td></tr>
+            <tr><td>
+				<table width="100%" style="border: 0px solid red;">
+			    	<tr>
+        				<td>[%# PROCESS abstract_menu curr_menu_field=cur_submenu href='/' _ MANAGER _ '/cur_submenu=' table_class='type_bon' menu_fields = menu_gal %]</td>
+				        <td align="center">[% PROCESS MENU_LINE %]</td>
+						<td align="right">[% PROCESS pager %]</td>
+				    </tr>
+				</table>

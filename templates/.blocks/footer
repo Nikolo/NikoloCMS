@@ -1,0 +1,28 @@
+				<table width="100%" style="border: 0px solid red;">
+			    	<tr>
+        				<td>[%# PROCESS abstract_menu curr_menu_field=cur_submenu href='/' _ MANAGER _ '/cur_submenu=' table_class='type_bon' menu_fields = menu_gal %]</td>
+				        <td align="right">[% PROCESS pager %]</td>
+				    </tr>
+				</table>
+                </td></tr>
+            </table>
+        </div>
+    </div>
+    <div class="counter">
+        <div class="counter_content content"><noindex>
+<table class="footer" border=0 width="100%">
+    <tr align=center>
+		<td><p><a href="http://jigsaw.w3.org/css-validator/check/referer"><img border=0 style="border:0;width:88px;height:31px" src="http://jigsaw.w3.org/css-validator/images/vcss" alt="Valid CSS!" ></a></p></td>
+		<td><p><a href="http://validator.w3.org/check?uri=referer"><img border=0 src="http://www.w3.org/Icons/valid-html401" alt="Valid HTML 4.01 Transitional" height="31" width="88"></a></p></td>	
+    </tr>
+</table>
+</noindex>
+<div class="copyright">
+    <div class="copyright_content content">2009-2010 Copyright by nikoloCMS. All rights reserved.</div>
+    <div class="work_time_content content">Страница сгенерированна за [% s.work_time %] сек.</div>
+</div>
+</div>
+    </div>
+</div>
+</BODY>
+</HTML>

@@ -1,0 +1,154 @@
+[% BLOCK block_content %]
+    <div class="form">
+        <div class="x-box-tl"><div class="x-box-tr"><div class="x-box-tc"></div></div></div>
+        <div class="x-box-ml"><div class="x-box-mr"><div class="x-box-mc">
+            <h3 style="margin-bottom: 5px;">[% content_name %]</h3>
+            <div>
+            [% PROCESS $entry_block %]
+            </div>
+        </div></div></div>
+        <div class="x-box-bl"><div class="x-box-br"><div class="x-box-bc"></div></div></div>
+    </div>
+[% END %]
+
+[% BLOCK button %]
+    <table style="width: [% b_width||'50px' %];" class="x-btn-wrap x-btn" border="0" cellpadding="0" cellspacing="0"><tbody>
+        <tr>
+            <td class="x-btn-left"><i>&nbsp;</i></td>
+            <td class="x-btn-center"><em>
+                <button class="x-btn-text" type="[% b_type %]" name="[% b_name %]">[% b_text %]</button>
+            </em></td>
+            <td class="x-btn-right"><i>&nbsp;</i></td>
+        </tr>
+    </tbody></table>
+[% END %]
+
+[% BLOCK button_no_center %]
+    <table style="width: [% b_width||'50px' %];" class="x-btn-wrap x-btn" border="0" cellpadding="0" cellspacing="0"><tbody>
+        <tr>
+            <td class="x-btn-left"><i>&nbsp;</i></td>
+            <td class="x-btn-no-center"><em>
+                <a class="x-btn-text" href="[% b_link %]" type="[% b_type %]">[% b_text %]</a>
+            </em></td>
+            <td class="x-btn-right"><i>&nbsp;</i></td>
+        </tr>
+    </tbody></table>
+[% END %]
+
+[% BLOCK menu_tabber %]
+    <div class="x-tabs-top" id="tabs1">
+        <div id="ext-gen3" class="x-tabs-wrap">
+            <div class="x-tabs-strip-wrap">
+                <table id="ext-gen5" class="x-tabs-strip" border="0" cellpadding="0" cellspacing="0"><tbody>
+                    <tr id="ext-gen4">
+                        [% FOREACH it=items %]
+                        <td [% s.controller _ s.action == it.keyword ? 'class="on"' : "" %]><a href="[% it.link %]" class="x-tabs-right">
+                            <span class="x-tabs-left"><em class="x-tabs-inner">
+                                <span title="View Script" class="x-tabs-text">[% it.name %]</span>
+                            </em></span>
+                        </a></td>
+                        [% END %]
+                    </tr>
+                </tbody></table>
+            </div>
+        </div>
+    </div>
+[% END %]
+
+[% BLOCK submenu %]
+	[% IF submenu && submenu.size > 0 %]
+		<table><tr>
+		[% FOREACH sit = submenu %]
+			<td>[% PROCESS button_no_center b_link=sit.link b_text=sit.name %]</td>
+		[% END %]
+		</tr></table>
+	[% END %]
+[% END %]
+
+[% BLOCK block_header %]
+<div class="x-unselectable x-layout-panel-hd">
+    <span class="x-unselectable x-layout-panel-hd-text">[% title %]</span>
+    <div class="x-unselectable x-layout-panel-hd-tools">
+        <div style="display: none;" class="x-layout-tools-button">
+            <div class="x-layout-tools-button-inner x-layout-close">&nbsp;</div>
+        </div>
+    </div>
+</div>
+[% END %]
+
+
+[% BLOCK pager %]
+[% IF s.pager && s.pager.last_page != s.pager.first_page %]
+<table>
+    <tr>
+        <td class="pager">Cтраницы:</td>
+		<td><a href="/[% s.controller %]/[% s.action %]/[% s.pager.first_page %][% IF s.pager_add_param %]?[% s.pager_add_param %][% END %]">[% s.pager.first_page %]</a></td>
+		[% IF s.pager.previous_page - s.pager.first_page > 1 %]<td>...</td>[% END %]
+		[% IF s.pager.previous_page != s.pager.first_page %]<td><a href="/[% s.controller %]/[% s.action %]/[% s.pager.previous_page %][% IF s.pager_add_param %]?[% s.pager_add_param %][% END %]">[% s.pager.previous_page %]</a></td>[% END %]
+		[% IF s.pager.next_page != s.pager.last_page %]<td><a href="/[% s.controller %]/[% s.action %]/[% s.pager.next_page %][% IF s.pager_add_param %]?[% s.pager_add_param %][% END %]">[% s.pager.next_page %]</a></td>[% END %]
+		[% IF s.pager.next_page && s.pager.last_page - s.pager.next_page > 0 %]<td>...</td>[% END %]
+		<td><a href="/[% s.controller %]/[% s.action %]/[% s.pager.last_page %][% IF s.pager_add_param %]?[% s.pager_add_param %][% END %]">[% s.pager.last_page %]</a></td>
+	</tr>
+</table>
+[% END %]
+[% END %]
+
+[% BLOCK ord_status %]
+[% SWITCH ORDER.status %]
+    [% CASE '1' %] Выставлен
+    [% CASE '2' %] Выставлен и подтверждён
+    [% CASE '3' %] Оплачен
+    [% CASE '4' %] Отменён
+    [% CASE '5' %] Просрочен
+[% END %]
+[% END %]
+
+[% BLOCK show_gal_ent %]
+[% PROCESS block_header title = it.name %]
+<div class="[% s.controller == 'shop' ? 'show_shop_ent' : 'show_gal_ent' %]">
+    <div class="more_[% s.controller == 'shop' ? 'shop' : 'gal' %]"><a href="/galery/bigshow/[% it.id %]"><img src="/images/more.jpg" border=0></a></div>
+    [% IF it.owner == s.user.id %]
+    <div class="add_to_[% s.controller == 'shop' ? 'shop' : 'gal' %]"><a href="/galeryfoto/add/[% it.id %]"><img src="/images/add_img.jpg" border=0></a></div>
+    <div class="edit_[% s.controller == 'shop' ? 'shop' : 'gal' %]"><a href="/galery/edit/[% it.id %]"><img src="/images/edit_img.jpg" border=0></a></div>
+    [% END %]
+    <div class="main_[% s.controller == 'shop' ? 'shop' : 'gal' %]">
+        <table width="100%" border=0>
+            <tr>
+                <td rowspan=[% s.controller == 'shop' ? '3' : '2' %] width=120 class="gal_ent_photo">
+[% img = it.image.first||it.image %]
+                    [% IF img.path %]
+                            <a href='/[% s.controller %]/bigshow/[% it.id %]' target="_blank"><img border=0 src='/images/Galery/[% img.path_small %]' height=150 alt='[% it.name %]'></a>
+                    [% ELSE %]
+                        <div class='no_image'>Изготавливается</div>
+                    [% END %]
+                    [% IF s.controller == 'shop' %]
+                        [% IF !it.where_bay %]
+                        <div>
+                            <table align=center><tr><td>
+                            [% gal_id = it.id %]
+                            [% PROCESS button_no_center b_link="/shop/bay/" _ gal_id b_text=(s.shoped.$gal_id ? 'Убрать из корзины' : 'Купить' ) %]
+                            </td></tr></table>
+                        </div>
+                        [% END %]
+                    [% END %]
+                </td>
+                [% IF s.controller == 'shop' %]
+                <td>Цена: [% it.price %] руб.</td>
+                [% ELSE %]
+                <td align="left"><i>[% it.description %]</i></td>
+                [% END %]
+            </tr>
+            [% IF s.controller == 'shop' %]
+            <tr>
+                <td align="left"><i>[% it.description %]</i><br></td>
+            </tr>
+            <tr>
+                <td colspan=2 align="center">[% IF it.where_bay %]Можно приобрести: [% it.where_bay %][% END %]</td>
+            </tr>
+            [% END %]
+        </table>
+    </div>
+</div>
+[% END %]
+
+

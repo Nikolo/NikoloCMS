@@ -1,0 +1,802 @@
+DROP TABLE IF EXISTS groups;;
+
+CREATE TABLE `groups` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(128) default NULL,
+  `description` text,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=cp1251;;
+
+insert into groups values( NULL,'wheel',NULL );;
+
+DROP TABLE IF EXISTS acls;;
+
+CREATE TABLE `acls` (
+  `id` int(11) NOT NULL auto_increment,
+  `page` int(11) NOT NULL default '0',
+  `grp` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=cp1251;;
+
+DROP TABLE IF EXISTS users;;
+
+CREATE TABLE `users` (
+  `id` int(10) unsigned NOT NULL auto_increment,
+  `login` varchar(255) NOT NULL default '',
+  `password` varchar(255) NOT NULL default '',
+  `email` varchar(255) NOT NULL default '',
+  `first_name` varchar(100) default NULL,
+  `last_name` varchar(100) default NULL,
+  `middle_name` varchar(100) default NULL,
+  `phone` varchar(15) default NULL,
+  `adress` varchar(255) default NULL,
+  `city` varchar(25) default NULL,
+  `comment` text,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=cp1251;;
+
+insert into users values( NULL,'admin','admin','admin@nikolo.cms',NULL,NULL,NULL,NULL,NULL,NULL,NULL );;
+
+DROP TABLE IF EXISTS pages;;
+
+CREATE TABLE `pages` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(255) NOT NULL default '',
+  `module_name` varchar(255) NOT NULL default '',
+  `title` varchar(255) default NULL,
+  `template` text,
+  `code` text,
+  `menu_pos` int(11) default NULL,
+  `flags` int(11) default NULL,
+  `menu_name` varchar(50) default NULL,
+  `bridge_pos` int(11) default NULL,
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=cp1251;;
+
+insert into pages values( NULL,'insert','manager','Добавление пользовательской страници',NULL,'use Encode qw(encode decode);
+	use IO::Dir;
+    my $self = shift;
+	if( $self->{tx}->req->{method} eq \'POST\' ){
+#TODO: редиректим на реферера!
+		my $rs = $self->app->{model}->resultset(\'Pages\');
+		my $params = $self->{tx}->{req}->params();
+		my $module = $params->param( \'module_name\' );
+		my $path = \'/manager/list/\'.$module;
+		my $name = $params->param( \'name\' );
+		my @bad_param = grep { $params->param( $_ ) !~ /[A-Za-z0-9]/ } qw( module_name name );
+		if( scalar @bad_param ){
+			#Неверно заполнены поля
+#TODO: генерация человекочитаемых ошибок
+		}
+		if( $name ){
+			if( $rs->search( { name => $name, module_name => $module } )->count()){
+				#Already exist
+			}
+			my $page = $rs->create({ 
+				name => $name,
+				title => $params->param( \'title\' )||\'Заголовок страници\',
+				template=> \'[% PROCESS head %]
+Текст страницы!!!
+[% PROCESS footer %]\',
+				module_name => $module,
+				flags => 0 });
+			if( my $err = $page->create_template( $self->app->{config}->get( \'path\' ), $self->app->{config}->get( \'main_block_template\' ) )){
+#ToDo: Выставить флаг, что шаблон поломан!
+				$self->app->{session}->data( \'error\' => $err );
+			}
+			else {
+				$self->app->{session}->data( result => \'Страница \'.$name.\' успешно добавлена\' );
+			}
+			$self->app->{session}->flush;
+		}
+		elsif( $module ){
+			if( $rs->search( { module_name => $module } )->count()){
+				#Already exist
+			}
+#TODO: Надо сделать дефолтный шаблон
+#TODO: Надо сделать дефолтные параметры флагов (страница после создания не доступна людям) 
+#TODO: \'welcome\' выносим в конфиг
+#TODO: Проверить что случится с ресалтсетом при ошибке от базы, надо обработать
+			my $page = $rs->create({ 
+				name => \'welcome\',
+				title => \'Заголовок страници\',
+				template=> \'[% PROCESS head %]
+Текст страницы!!!
+[% PROCESS footer %]\',
+				module_name => $module,
+				flags => 0 });
+			my $dir = $self->app->{config}->get( \'path\' ).\'templates/\'.$module;
+			mkdir( $dir );
+			if( my $err = $page->create_template( $self->app->{config}->get( \'path\' ), $self->app->{config}->get( \'main_block_template\' ) )){
+#ToDo: Выставить флаг, что шаблон поломан!
+				$self->app->{session}->data( \'error\' => $err );
+			}
+			else {
+				$self->app->{session}->data( result => \'Раздел \'.$module.\' успешно добавлен\' );
+			}
+			$self->app->{session}->flush;
+		}
+		else{
+			#нет обязательных параметров
+		}
+		return $self->redirect_to( $path )->render_text(\'Redirecting!\')
+	}
+	else {
+		# Error if method not post!!!
+		return $self->redirect_to( \'/manager\' )->render_text(\'Redirecting!\')
+	}
+    return;',NULL,NULL,NULL,NULL );;
+
+insert into pages values( NULL,'list','manager','Список пользовательских','[% PROCESS head %]
+[% IF s.id %]
+<table>
+	<tr>
+		<th>№</th>
+		<th>Название</th>
+		<th>Заголовок страницы</th>
+		<th>Модуль</th>
+		<th>Ссылка</th>
+		<th>Флаги</th>
+		<th>Действия</th>
+	</tr>
+	[% FOREACH man = self.stash.page_list.all %]
+		<tr>
+			<td>[% man.id %]</td>
+			<td>[% man.name | html %]</td>
+			<td>[% man.title | html %]</td>
+			<td>[% man.module_name | html %]</td>
+			<td><a href=\'/[% man.module_name | html %]/[% man.name | html %]\'>/[% man.module_name | html %]/[% man.name | html %]</a></td>
+			<td>[% man.flags %]</td>
+			<td>
+				<a href=\'/manager/delete/[% man.id %]\'>Удалить</a><br>
+				<a href=\'/manager/update/[% man.id %]\'>Изменить</a><br>
+			</td>
+		</tr>
+	[% END %]
+	<tr>
+	<form method=\'post\' action=\'/[% self.stash.controller %]/insert\'>
+	[%# USE dumper(indent=1, pad=\'<br>\') %]
+	[%# dumper.dump( self.stash ) %]
+		<td></td>
+		<td><input type=\'text\' name=\'name\' value=\'[% self.tx.req.param( \'name\' ) | html %]\' %]</td>
+		<td><input type=\'text\' name=\'title\' value=\'[% self.tx.req.param( \'title\' ) | html %]\' %]</td>
+		<td><input type=\'hidden\' name=\'module_name\' value=\'[% s.id | html %]\' %]</td>
+		<td></td>
+		<td><input type=\'submit\' value=\'Создать\'></td>
+	</tr>
+	</form>
+</table>
+<a href=\'/manager/list\'>Список модулей</a><br>
+[% ELSE %]
+<table>
+	<tr>
+		<th>Раздел</th>
+	</tr>
+	[% FOREACH man = self.stash.module_list.all %]
+		<tr>
+			<td><a href=\'/manager/list/[% man.module_name %]\'>/[% man.module_name | html %]</a></td>
+		</tr>
+	[% END %]
+	<tr>
+	<form method=\'post\' action=\'/[% self.stash.controller %]/insert\'>
+		<td>/<input type=\'text\' name=\'module_name\' value=\'[% self.tx.req.param( \'module_name\' ) | html %]\' %]</td>
+		<td><input type=\'submit\' value=\'Создать\'></td>
+	</form>
+	</tr>
+        <tr>
+        <form method="post" action=\'/[% self.stash.controller %]/backup\'>
+                <td><input type=\'submit\' value=\'Резервная копия\'></td>
+        </form>
+        </tr>
+</table>
+[% END %]
+[% PROCESS footer %]','my $self = shift;
+	my $rs = $self->app->{model}->resultset(\'Pages\');
+	if( $self->stash->{id} ){
+		$self->stash->{page_list} = $rs->search({ module_name => $self->stash->{id} });
+	}
+	else {
+		$self->stash->{module_list} = $rs->search( undef, { select => [ \'module_name\' ], distinct => 1 });
+	}
+    return;',NULL,NULL,NULL,NULL );;
+
+insert into pages values( NULL,'update','manager','Редактирование пользовательской страницы','[% PROCESS head %]
+<form method=\'POST\'>
+        Флаги:<br> [% FOREACH fl = s.page.extract_flags %]
+              [% fl.name %]<input type="checkbox" name="flags" value="[% fl.id %]" [% IF fl.isset %]checked[% END %]><br>
+        [% END %]    
+        Название страницы: <input type="text" name="title" value="[% s.page.title %]"><br>
+        Позиция в меню: <input type="text" name="menu_pos" value="[% s.page.menu_pos %]"><br>
+        Имя в меню: <input type="text" name="menu_name" value="[% s.page.menu_name %]"><br>
+        Группы:<br>
+        [% FOREACH grp = s.grps %]
+            [% grp.name %]<input type="checkbox" name="group" value="[% grp.id %]" value="[% grp.name %]" [% IF s.page_grps.grep( grp.id ).size > 0 %]checked="checked"[% END %]><br>
+        [% END %]
+	Шаблон:<br><textarea name=\'template\' style="height: 250px; width: 100%">[% s.page.template | html %]</textarea><br>
+        Код:<br><textarea name=\'code\' style="height: 250px; width: 100%">[% s.page.code | html %]</textarea><br>
+        Остаться на этой странице: <input type="checkbox" name="this_page"><br>
+	<input type=\'submit\' value=\'Обновить\'>
+</form>
+[% PROCESS footer %]','use Utils::nikolo qw(rebuild_module);
+my $self = shift;
+my $rs = $self->app->{model}->resultset(\'Pages\');
+#TODO: AJAX вызов типа посмотреть как будет выглядеть
+$self->stash->{page} = $rs->find( $self->stash->{id} );
+$self->stash->{page_grps} = [map $_->id, $self->stash->{page}->groups->all()];
+$self->stash->{grps} = [$self->app->{model}->resultset(\'Groups\')->all()];
+if( $self->{tx}->req->{method} eq \'POST\' ){
+    my %params = map {$_ => $self->{tx}->req->param( $_ )} qw/title menu_pos menu_name template code/;
+    $params{flags} |= $_ for $self->{tx}->req->param( \'flags\' );
+    $self->stash->{page}->update( \%params );
+    $self->stash->{page}->set_groups( [ map +{id => $_}, $self->{tx}->req->param( \'group\' )] );
+    my $redirect = $self->{tx}->req->param( \'this_page\' ) ? \'/manager/update/\'.$self->stash->{id} : \'/manager/list/\'.($self->stash->{page}->module_name );
+my $module_pages = {map { $_->name => { text => $_->code, title => $_->title }} $rs->search({ module_name => $self->stash->{page}->module_name }, {select => [ \'module_name\', \'name\', \'code\', \'template\', \'title\' ]})->all() };
+if( my $err = $self->stash->{page}->create_template( $self->app->{config}->get( \'path\' ), $self->app->{config}->get( \'main_block_template\' ) )||rebuild_module( $self->app->{config}->get( \'path\' ), ucfirst($self->stash->{page}->module_name), $module_pages )){			$self->app->{session}->data( \'error\' => $err );
+            $redirect = \'/manager/update/\'.$self->stash->{id};
+		}
+		else {
+			$self->app->{session}->data( result => \'Страница \'.($self->stash->{page}->name).\' в разделе \'.($self->stash->{page}->module_name).\' успешно изменена\' );
+		}
+
+        $self->app->{session}->flush();
+        return $self->redirect_to( $redirect )->render_text( \'Redirecting!\' );
+
+	}
+    return;',NULL,NULL,NULL,NULL );;
+
+insert into pages values( NULL,'install','manager',NULL,'[% PROCESS head %]
+Добавить плагин в систему.<br><br>
+Внимание!!! Не доверяйте плагинам скаченным с подозрительных ресурсов, это может привести к появлению уязвимостей в системе.<br>
+
+<form method="POST" enctype="multipart/form-data">
+<input type="file" name="archive">
+<input type="submit" value="Инсталировать">
+</form>
+[% PROCESS footer %]','my $self = shift;
+	if( $self->{tx}->req->{method} eq \'POST\' ){
+		use Data::Dumper;
+		my $arch = $self->{tx}->req->upload( \'archive\' );
+		my $arch_path = $self->app->{config}->get( \'distfiles\' ).\'/\'.( $arch->filename );
+		$arch->move_to( $arch_path );
+		
+		#die $file;
+#TODO: Проверить на наличие метода Deinstall если нет то выругаться, что нельзя автоматически удалить.
+	}
+	return;',NULL,NULL,NULL,NULL );;
+
+insert into pages values( NULL,'delete','manager','Удаление пользовательской страници','[% PROCESS head %]
+Вы дествительно хотите удалить страницу [% s.page.name %]<br>
+Внимание! Cтраница <a href="[% s.page.link | html %]">[% s.page.link %]</a> после удаления доступна не будет!!!<br>
+<form method=POST>
+<input type="submit" value="Удалить">
+</form>
+[% PROCESS footer %]','my $self = shift;
+	unless( $self->stash->{id} ){
+#TODO: непредвиденная ошибка! ID обязателен				
+	}
+	my $rs = $self->app->{model}->resultset(\'Pages\');
+	$self->stash->{page} = $rs->find( $self->stash->{id} );
+	my $module = $self->stash->{page}->module_name;
+	if( $self->{tx}->req->{method} eq \'POST\' ){
+		my $dir = $self->app->{config}->get( \'path\' ).\'templates/\'.$module;
+		unlink( $dir.( $self->stash->{page}->path ));
+		my $err = $! if $!;
+		$self->stash->{page}->delete();
+		my $redirect_url = \'/manager/list\';
+		if( $rs->search( { module_name => $module } )->count() ){
+			$redirect_url .= \'/\'.$module;
+		}
+		else {
+			rmdir( $dir );
+			$err = $! if $!;
+		}
+		$self->app->{session}->data( error => $err );
+		$self->app->{session}->flush();
+		return $self->redirect_to( $redirect_url )->render_text( \'Redirecting!\' );
+	}
+    return;',NULL,NULL,NULL,NULL );;
+
+insert into pages values( NULL,'templates','manager',NULL,'[% PROCESS head %]
+[% IF s.dir %]
+	[% FOREACH file = s.dir %]
+		<a href="/manager/templates/[% file %]">[% file %]</a><br>
+	[% END %]
+[% ELSE %]
+	<form method="POST">
+		<textarea name="template_text" style="height: 250px" cols=120>[% s.template_text | html %]</textarea><br>
+		<input type="submit" value="Обновить">
+	</form>
+[% END %]
+[% PROCESS footer %]','use Utils::nikolo qw(check_template write_file);
+my $self = shift;
+	if( $self->stash->{id} ){
+		my $path = $self->app->{config}->get( \'main_block_template\' ).\'/\'.$self->stash->{id};
+		open my $FH, \'< \', $path;
+		my $text;
+		while( <$FH> ){
+			$text .= $_;
+		}
+		close( $FH );
+		$text = decode( \'utf8\', $text );
+		$self->stash->{template_text} = $text;
+		if( $self->{tx}->req->{method} eq \'POST\' ){
+			my $new_text = $self->{tx}->req->param( \'template_text\' ); 
+			if( $self->stash->{error} = check_template( $self->app->{config}->get( \'main_block_template\' ), \$new_text )||write_file( $path, $new_text )){
+				$self->stash->{template_text} = $new_text;
+			}
+			else {
+				return $self->redirect_to( \'/manager/templates\' )->render_text( \'Redirecting!\' );
+			}
+		}
+	}
+	else {
+		$self->stash->{dir} = [grep {$_ !~ /^..?$/} IO::Dir->new( $self->app->{config}->get( \'main_block_template\' ))->read()];
+	}
+	return;',NULL,NULL,NULL,NULL );;
+
+insert into pages values( NULL,'welcome','manager','Админка','[% PROCESS head %]
+<center>Страница управления сайтом!</center>
+<a href=\'/manager/list\'>Разделы</a><br>
+<a href=\'/manager/templates\'>Дополнительные шаблоны</a><br>
+
+<br><br><br>nikolo site bulider!<br>
+[% PROCESS footer %]',NULL,'1000',NULL,'Админка',NULL );;
+
+insert into pages values( NULL,'welcome','user','Информация о пользователе','[% PROCESS head %]
+[% IF self.stash.user %]
+	Привет [% self.stash.user.login %]
+[% ELSE %]
+	Не авторизован
+[% END %]
+[% PROCESS footer %]','my $self = shift;
+	$self->render();',NULL,'1',NULL,NULL );;
+
+insert into pages values( NULL,'auth','user','Авторизация','[% PROCESS head %]
+<form method="POST" action="/user/auth">
+<table>
+    <tr>
+        <td>Логин/email</td>
+	<td><input type="text" name="login" value="[% request.param( "login" ) %]"></input></td>
+    </tr>
+    <tr>
+		<td>Пароль</td>
+		<td><input type="password" name="password"></input></td>
+	</tr>
+	<tr>
+		<td colspan=2><input type="submit" value="Войти"></input></td>
+	</tr>
+</table>
+</form>
+[% PROCESS footer %]','my $self = shift;
+if( $self->{tx}->req->{method} eq \'POST\' ){
+# Попытка авторизации (пост формы)
+# TODO: Надо сделать проверку, если авторизован то показывать другой шаблон.
+    my $params = $self->{tx}->{req}->params();
+    my $model = $self->{app}->{model};
+    my $rs;
+    if( $params->param( \'login\' ) =~ /@/ ){
+        $rs = $model->resultset(\'Users\')->search({ email => $params->param( \'login\' ) });
+    }
+    else {
+        $rs = $model->resultset(\'Users\')->search( {login => $params->param( \'login\' )||$params->param( \'wpName\' )});
+    }
+    my $user = $rs->next;
+    if( $rs->count == 1 && $user->password eq $params->param( \'password\' )||$params->param( \'wpPassword\' )){
+	$self->{app}->{session}->data( \'logged\' => $user->id );
+	$self->{app}->{session}->flush;
+# TODO: Редиректим на back или на стартовую
+	my $path = $params->param( \'returnto\' )||$self->tx->req->headers->referrer||\'/\';
+	return $self->redirect_to( $path )->render_text(\'Login ok redirecting!\');
+    }
+    elsif( $rs->count > 1 ){
+        die \'Internal error user with same name more then one\';
+    }
+    else {
+        $self->stash->{error} = \'Неверная пара имя пользователя, пароль. Повторите попытку авторизации.\';
+    }
+}
+$self->render();
+',NULL,'1',NULL,NULL );;
+
+insert into pages values( NULL,'logout','user','Выход',NULL,'my $self = shift;
+	$self->{app}->{session}->flash( \'logged\' );
+	$self->{app}->{session}->flush;
+	$self->render;
+# TODO: Редиректим на back или на стартовую
+	return $self->redirect_to(\'/\')->render_text(\'Logout ok redirecting!\');',NULL,'1',NULL,NULL );;
+
+insert into pages values( NULL,'wikiname','user','Имя пользователя','[% IF self.stash.user %][% self.stash.user.login %][% END %]','my $self = shift;
+	$self->render();',NULL,NULL,NULL,NULL );;
+
+insert into pages values( NULL,'registration','user','Регистрация','[% PROCESS head %]
+[% IF self.stash.user %]
+	[% IF self.stash.good_reg %]
+Поздравляем!!! Вы успешно зарегестрировались. Теперь вы можете писать статьи в энциклопедии. И пользоваться услугами без ограничений.<br>
+Спасибо вам!
+	[% ELSE %]
+Вы сейчас авторизованы как: [% self.stash.user.login %]<br>
+Если вы действительно хотите зарегестрироваться то сначала вам надо <a href="/user/logout">выйти</a>
+	[% END %]
+[% ELSE %]
+<form method="POST">
+<table>
+	<tr>
+		<td>Логин</td>
+		<td><input type="text" name="login" value="[% request.param( "login" ) %]"></input></td>
+	</tr>
+	<tr>
+		<td>email</td>
+		<td><input type="text" name="email" value="[% request.param( "email" ) %]"></input></td>
+	</tr>
+	<tr>
+		<td>Пароль</td>
+		<td><input type="password" name="password"></input></td>
+	</tr>
+	<tr>
+		<td colspan=2><input type="submit" value="Зарегестрироваться"></input></td>
+	</tr>
+</table>
+</form>
+[% END %][% PROCESS footer %]','my $self = shift;
+	if( $self->{tx}->req->{method} eq \'POST\' ){
+		my $params = $self->{tx}->{req}->params();
+		my $model = $self->{app}->{model};
+		my $rs = $model->resultset(\'Users\')->search( {login => $params->param( \'login\' )});
+		if( $rs->count ){
+			$self->stash->{error} = \'Пользователь с таким именем уже существует.\';
+		}
+	else {
+			my $param = {map {$_ => $params->param($_)} qw/login email password/};
+			my $user = $model->resultset(\'Users\')->create( $param );
+			$user->insert();
+			$self->{app}->{session}->data( logged => $user->id );
+			$self->{app}->{session}->flush;
+			$self->stash->{good_reg} = 1;
+			$self->stash->{user} = $self->{app}->{user} = $user;
+# TODO: Редиректим на back или на стартовую
+#			return $self->redirect_to(\'/user/registration\')->render_text(\'Login ok redirecting!\');
+		}
+	}
+	$self->render();',NULL,'1',NULL,NULL );;
+
+insert into pages values( NULL,'init_user','user','Вход в защищенную зону','[% PROCESS head %]
+Для входа на страницу [% s.page_name %] необходимо авторизоваться!
+<form method="POST" action="/user/auth">
+<input type="hidden" name="returnto" value="[% self.stash.returnto %]">
+<table>
+	<tr>
+		<td>Логин/email</td>
+		<td><input type="text" name="login" value="[% request.param( "login" ) %]"></input></td>
+	</tr>
+	<tr>
+		<td>Пароль</td>
+		<td><input type="password" name="password"></input></td>
+	</tr>
+	<tr>
+		<td colspan=2><input type="submit" value="Войти"></input></td>
+	</tr>
+</table>
+</form>
+[% PROCESS footer %]','my $self = shift;
+	$self->{app}->{session}->tx( $self->tx );
+	$self->{app}->{session}->load || $self->{app}->{session}->create;
+# Только проверка авторизации, вход на прямую невозможен!
+	die Mojo::Exception->new( \'Произошла непредвиденная ситуация!\' ) if $self->stash->{controller} eq \'user\' && $self->stash->{action} eq \'init_user\';
+# Проверим жива ли сессия у пользователя
+	$self->stash->{$_} = $self->{app}->{session}->flash( $_ ) for qw( error warning result );
+        $self->{app}->{session}->flush();
+	if( $self->{app}->{session}->data->{logged} ){
+		$self->stash->{user} = $self->{app}->{user} = $self->{app}->{model}->resultset(\'Users\')->find( $self->{app}->{session}->data->{logged} );
+	}
+        my $page = $self->{app}->{model}->resultset(\'Pages\')->search( { module_name => $self->stash->{controller}, name => $self->stash->{action} }, {select => [\'id\', \'flags\']})->next;
+         return $self->app->static->serve_404($self) unless $page;
+eval {
+        my $pages = [$self->{app}->{model}->resultset(\'Pages\')->search(
+            { -and => [
+                menu_pos => {\'>\', 0}, 
+                -or => [
+                    ($self->stash->{user} && $self->stash->{user}->groups->search({ \'name\' => \'wheel\' })->count() ? ( \'1\' => \'1\' ) : (\'roles.user\' => ($self->stash->{user} ? $self->stash->{user}->id : -1 ))),
+                    \'flags\' => { \'&\' => 2**0 },
+                ],
+            ]},
+            { 
+                join => { acls => {grp => \'roles\'} },
+                select => [qw/menu_name me.name module_name/],
+                order_by => \'menu_pos\',
+            })->all()];
+#use Data::Dumper;
+#die Dumper( map $_->title(), @$pages );
+        $self->stash->{menu} =[ map { keyword => $_->module_name.$_->name, link => \'/\'.$_->module_name.\'/\'.$_->name, name => $_->menu_name }, @$pages ];
+};
+$self->stash->{error} = $@ if $@;
+        return 1 if ($page->flags & 2**0)||($self->stash->{user} && ( $self->stash->{user}->groups->search({ \'name\' => \'wheel\' })->count() || scalar( $page->groups->search({ \'roles.user\' => $self->stash->{user}->id }, {join =>[ qw/roles/ ]})->count())));
+
+	$self->stash->{returnto} = $self->tx->req->url->path->to_string||$self->tx->req->param( \'returnto\' );
+        $self->stash->{page_name} = $page->title;
+	$self->render( \'user/init_user\' );
+	return;
+',NULL,'1',NULL,2 );;
+
+insert into pages values( NULL,'welcome','main','Главная','[% PROCESS head %]
+<center>Добро пожаловать в саморазвивающуюся nikoloCMS!</center>
+
+[% PROCESS footer %]',NULL,'1','1','Главная',NULL );;
+
+insert into pages values( NULL,'backup','manager','Резервное копирование системы',NULL,'use Utils::nikolo qw(_backup);
+
+my $self = shift;
+my @srcs = $self->app->{model}->sources;
+
+$self->stash->{id} = \'\' if $self->stash->{id} =~ m{/};
+
+my $file = $self->stash->{id}||"schema_".time().".dump";
+_backup( \@srcs, $self->app->{config}->get(\'path\')."/backup/".$file, $self->app->{model}->storage->dbh );
+
+$self->app->{session}->data( result => "Резервная копия(".$self->app->{config}->get(\'path\')."/backup/".$file.") создана успешно.");
+$self->app->{session}->flush();
+return $self->redirect_to( \'/manager/list\' )->render_text( \'Redirecting!\' );
+',NULL,NULL,NULL,NULL );;
+
+insert into pages values( '16','list','user','Список пользователей','[% PROCESS head %]
+<table>
+[% FOREACH user = s.users %]
+    <tr>
+        <td>[% user.login %]</td>
+        <td>[% user.email %]</td>
+        <td><a href="/user/view/[% user.id %]">Посмотреть</a><br></td>
+        <td><a href="/user/edit/[% user.id %]">Редактировать</a><br></td>
+    </tr>
+[% END %]
+</table>
+[% PROCESS footer %]','my $self = shift;
+my $rs = $self->app->{model}->resultset( \'Users\' );
+if( !$self->stash->{user} || !grep {$_->name eq \'wheel\' } $self->stash->{user}->groups ){
+    $rs = $rs->search( {\'grp.name\' => \'dealer\'}, {join => {roles => \'grp\'}} );
+}
+else {
+    $self->stash->{is_wheel} = 1;
+}
+$rs = $rs->page( $self->stash->{id}||1 );
+$self->stash->{users} = [$rs->all()];
+$self->stash->{pager} = $rs->pager;
+$self->app->{session}->flush();
+return;','900','1','Пользователи',NULL );;
+
+insert into pages values( NULL,'view', 'user','Просмотр данных пользователя','[% PROCESS head %]<center><div style="width: 300px">
+[% PROCESS block_content entry_block=\'user_data\' content_name=\'Информация о \' _ (s.is_dealer ? \'продавце\' : \'пользователе\') %]</div></center>
+[% BLOCK user_data %]
+<table>
+<tr>
+    <td>Псевдоним:</td><td>[% s.view_user.login %]</td>
+</tr>
+[% IF s.is_dealer %]
+<tr>
+    <td>Email:</td>
+    <td>[% s.view_user.email | html %]</td>
+</tr>
+<tr>
+    <td>Телефон:</td>
+    <td>[% s.view_user.phone | html %]</td>
+</tr>
+<tr>
+    <td>Город:</td>
+    <td>[% s.view_user.city | html %]</td>
+</tr>
+<tr>
+    <td colspan="2">Все <a href="/galery/search?author=[% s.view_user.id %]&go=1">изделия</a> пользователя</td>
+</tr>
+[% END %]
+</table>
+[% END %]
+[% PROCESS footer %]','my $self = shift;
+$self->stash->{view_user} = $self->stash->{id} ? $self->app->{model}->resultset( \'Users\' )->find( $self->stash->{id} ) : $self->stash->{user};
+$self->stash->{is_dealer} = grep {$_->name eq \'dealer\'} $self->stash->{view_user}->groups;
+return;',NULL,'1',NULL,NULL );;
+
+insert into pages values( NULL,'edit','user','Редактирование данных пользователя','[% PROCESS head %]<div style="width: 300px">
+[% PROCESS block_content entry_block=\'user_data\' content_name=\'Данные пользователя\' %]</div>
+[% BLOCK user_data %]
+<form method="POST">
+<table>
+<tr>
+    <td>Псевдоним:</td><td>[% s.user.login %]</td>
+</tr>
+<tr>
+    <td>Email:</td>
+    <td><input type="text" name="email" value="[% s.user.email | html %]"></td>
+</tr>
+<tr>
+    <td>Фамилия:</td>
+    <td><input type="text" name="last_name" value="[% s.user.last_name | html %]"></td>
+</tr>
+<tr>
+    <td>Имя:</td>
+    <td><input type="text" name="first_name" value="[% s.user.first_name | html %]"></td>
+</tr>
+<tr>
+    <td>Отчество:</td>
+    <td><input type="text" name="middle_name" value="[% s.user.middle_name | html %]"></td>
+</tr>
+<tr>
+    <td>Телефон:</td>
+    <td><input type="text" name="phone" value="[% s.user.phone | html %]"></td>
+</tr>
+<tr>
+    <td>Город:</td>
+    <td><input type="text" name="city" value="[% s.user.city | html %]"></td>
+</tr>
+<tr>
+    <td>Адрес:</td>
+    <td><input type="text" name="adress" value="[% s.user.adress | html %]"></td>
+</tr>
+<tr>
+    <td>Passwd:</td>
+    <td><input type="text" name="password"></td>
+</tr>
+<tr>
+    <td>Группы</td>
+    <td>[% FOREACH grp = s.user.groups %]
+<input type="checkbox" name="del_grp" value="[% grp.id %]">[% grp.name %]<br>
+[% END %]
+[% IF s.groups.size %]
+Добавить: <select name="add_groups">
+<option value=0>--</option>
+[% FOREACH grp = s.groups %]
+<option value="[% grp.id %]">[% grp.name | html %]</option>
+[% END %]
+</select>
+[% END %]
+    </td>
+</tr>
+<tr>
+    <td colspan=2><input type="submit" value="Сохранить"></td>
+</tr>
+</table>
+</form>
+[% END %]
+[% PROCESS footer %]','my $self = shift;
+if( !$self->stash->{user}){
+    return $self->redirect_to( \'/\' );
+}
+my $is_wheel = $self->stash->{user}->groups->search({ \'name\' => \'wheel\' })->count();
+if( $is_wheel ){
+    $self->stash->{user} = $self->app->{model}->resultset( \'Users\' )->find( $self->stash->{id} ) if $self->stash->{id};
+    #TODO: исключить все группы в которых есть пользователь
+    $self->stash->{groups} = [$self->app->{model}->resultset( \'Groups\' )->all()];
+}
+if( $self->{tx}->req->{method} eq \'POST\' ){
+    my %param = map {$_ => $self->{tx}->req->param(  $_ )||\'\'} qw/email first_name last_name middle_name phone adress city/;
+    $param{password} = $self->{tx}->req->param( \'password\' ) if $self->{tx}->req->param( \'password\' );
+    if( $is_wheel ){
+        $param{comment} = $self->{tx}->req->param( \'comment\' );
+        if( $self->{tx}->req->param( \'add_groups\' )){
+            $self->stash->{user}->add_to_groups({id => $self->{tx}->req->param( \'add_groups\' )});
+        }
+        if( $self->{tx}->req->param( \'del_grp\' )){
+            $self->stash->{user}->remove_from_groups($self->app->{model}->resultset( \'Groups\' )->find($self->{tx}->req->param( \'del_grp\' )));
+        }
+    }
+    $self->stash->{user}->update( \%param );
+}
+return;',NULL,'1',NULL,NULL );;
+
+insert into pages values( NULL,'contact','main','Контакты','[% PROCESS head %]
+<table width="100%" border=0>
+    <tr>
+        <td colspan=2 style="color: green;"><b><i>Вы можете помочь развитию и поддержке этого проекта:</i></b></td>
+    </tr>
+    <tr>
+        <td>
+            <ul>
+                <li>WebMoney: R853502629361 или Z657423177246</li>
+                <li>Yandex.Деньги: 4100172628228 <form method="POST" action="http://127.0.0.1:8129/wallet">
+                        <input type=hidden name="wbp_Version" value="1.0">
+                        <input type=hidden name="wbp_PayCashMessage" value="FAIAAQAAAIa19kxSOPvBAAAAAOwBAAChAAAAAQAAAJHkgxXE6OLuxOXw5eLuAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFnAAAAwvsg7O7m5fLlIO7v+Dy6PL8IO3g+OUg8+3o6uDr/O3u5SDk5fDl4vblIO/w6CDv7uzu+egg3+3k5erxLsTl7eXjDQrR9+XyIOru8PDl8e/u7eTl7fLgOiA0MTAwMTcyNjI4MjI4AGcJrg0SJwEAEicBABca6KAMhjNfIdudhXww2HS126MRffAqmqbN9m2Eqt15VtcTZQS5GWdLKZVeQ0OGk4TXM3YXWMFQBA9xDrfXAlBxUiZTAZyRIOdUrZ7LZzIp/7+19KassC+f/iWaoFS6kTn68MImsqHEvHmfQgCilkm8M/z3XVFEBlCyNFhPXaWlAAAAAGcJrg1kDiJOAQAiTgEA+SycR/1ckgJVVj0LjyzP25AMoHaiwckMr9/sTYwQDtwZncf2Wk1GNwpPmSr8wzscxcMCYelfJEslHkSKuiG4eN71clLidcVCfFqFjgzbR2/5LXIyaaLBsveA118DxMFTwQQfDVfhmkuGc5un+43FP3PHw9fCXY0CrNVNDr3xRKEAAAAALgAAAAABDAAgAAAAAQAAACIAAAAgAAAAFgAAAHN1cHBvcnRAZGl2b2RlcmV2by5ydQBIKhbfmfkq8dbviiI6FKedtksT7Q==">
+                        [% PROCESS button b_type="submit" b_text="Добавить визитную карточку" %]
+                    </form>
+                </li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <td colspan=2 style="color: green;"><b><i>Связаться с нами Вы можете любым, удобным для Вас способом:</i></b></td>
+    </tr>
+    <tr>
+        <td colspan=2 align=left>Позвонив по телефону: +7 (909) 995-79-51</td>
+    </tr>
+    <tr>
+        <td colspan=2 align=left>Написав письмо на Email: <a href="mailto:nikolo@educentr.info">nikolo@educentr.info</a></td>
+    </tr>
+    [% IF sended %]
+        [% PROCESS feedback_result %]
+    [% ELSE %]
+        [% PROCESS feedback_form %]
+    [% END %]
+    <tr>
+        <td>Мы производим внедрение, доработку и настройку данного продукта под ваши нужды.</td>
+    </tr>
+</table>
+
+[% BLOCK feedback_result %]
+    <tr>
+        <td colspan=2 align="center"><h4>Ваше сообщение отправлено.</h4></td>
+    </tr>
+[% END %]
+
+[% BLOCK feedback_form %]
+    <tr>
+        <td colspan=2>Либо заполнив форму "Мгновенного сообщения":</td>
+    </tr>
+    <tr>
+        <td colspan=2 align="center"><table><tr><td>[% PROCESS block_content entry_block=\'FEEDBACK_FORM\' content_name=\'Отправить сообщение в службу поддержки\' %]</td></tr></table></td>
+    </tr>
+[% END %]
+
+[% BLOCK FEEDBACK_FORM %]
+<form method="POST">
+<table>
+    <tr>
+        <td align=right>Обратный адрес(Email):</td>
+        <td align=left><input value="[% email %]" type="text" name="email" size="20"></td>
+    </tr>
+    <tr>
+        <td align=right>Тема:</td>
+        <td align=left><input type="text" name="subject" value="[% subject %]" size="20"></td>
+    </tr>
+    <tr>
+        <td colspan=2 align=center><textarea rows=10 cols=55 name="message" style="height: 100px;" class="mceEditor">[% message %]</textarea></td>
+    </tr>
+    <tr>
+        <td colspan=4 align=center>[% PROCESS button b_type="submit" b_text="Отправить"%]</td>
+    </tr>
+</table>
+</form>
+[% END %]
+
+[% PROCESS footer %]',NULL,'50','1','Контакты',NULL );;
+
+insert into pages values( NULL,'welcome','groups','Заголовок страници','[% PROCESS head %]
+Текст страницы!!!
+[% PROCESS footer %]',NULL,NULL,NULL,NULL,NULL );;
+
+insert into pages values( NULL,'add','groups','Добавление группы',NULL,'my $self = shift;
+my $gr = $self->app->{model}->resultset( \'Groups\' )->create({ 
+    name => $self->{tx}->req->param( \'name\' ),
+    description => $self->{tx}->req->param( \'description\' )});
+$gr->insert();
+return $self->redirect_to( \'/groups/list\' )->render_text(\'Group added!\');
+return;
+',NULL,NULL,NULL,NULL );;
+
+insert into pages values( NULL,'list','groups','Список групп','[% PROCESS head %]
+<table>
+<tr><th>Название</th><th>Описание</th></tr>
+[% FOREACH gr = s.groups %]
+    <tr><td>[% gr.name %]</td><td>[% gr.description %]</td></tr>
+[% END %]
+    <tr><form action="/groups/add" method="POST"><td><input name="name"></td><td><input name="description"><input type="submit" value="Добавить"></td></tr>
+</table>
+[% PROCESS footer %]','my $self = shift;
+$self->stash->{groups} = [$self->app->{model}->resultset( \'Groups\' )->page(1)->all()];
+return;',NULL,NULL,NULL,NULL );;
+
+DROP TABLE IF EXISTS session;;
+
+CREATE TABLE `session` (
+  `sid` varchar(40) NOT NULL default '',
+  `data` text,
+  `expires` int(10) unsigned NOT NULL default '0',
+  PRIMARY KEY  (`sid`),
+  UNIQUE KEY `sid` (`sid`)
+) ENGINE=MyISAM DEFAULT CHARSET=cp1251;;
+
+DROP TABLE IF EXISTS role;;
+
+CREATE TABLE `role` (
+  `id` int(11) NOT NULL auto_increment,
+  `user` int(11) NOT NULL default '0',
+  `grp` int(11) NOT NULL default '0',
+  PRIMARY KEY  (`id`)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=cp1251;;
+
+insert into role values( NULL,'1','1' );;
