@@ -1,0 +1,86 @@
+update pages set flags = flags|1 where module_name='user' and name='wikiname';;
+
+update pages set template = '[% PROCESS head %]
+[% IF self.stash.user %]
+	[% IF self.stash.good_reg %]
+Поздравляем!!! Вы успешно зарегистрировались. Теперь вы можете писать статьи в энциклопедии. И пользоваться услугами без ограничений.<br>
+Спасибо вам!
+	[% ELSE %]
+Вы сейчас авторизованы как: [% self.stash.user.login %]<br>
+Если вы действительно хотите зарегистрироваться то сначала вам надо <a href="/user/logout">выйти</a>
+	[% END %]
+[% ELSE %]
+<form method="POST">
+<table>
+	<tr>
+		<td>Логин</td>
+		<td><input type="text" name="login" value="[% request.param( "login" ) %]"></input></td>
+	</tr>
+	<tr>
+		<td>email</td>
+		<td><input type="text" name="email" value="[% request.param( "email" ) %]"></input></td>
+	</tr>
+	<tr>
+		<td>Пароль</td>
+		<td><input type="password" name="password"></input></td>
+	</tr>
+	<tr>
+		<td colspan=2><input type="submit" value="Зарегистрироваться"></input></td>
+	</tr>
+</table>
+</form>
+[% END %][% PROCESS footer %]', code = 'use Data::UUID;
+my $self = shift;
+	if( $self->{tx}->req->{method} eq \'POST\' ){
+		my $params = $self->{tx}->{req}->params();
+		my $model = $self->{app}->{model};
+		my $rs = $model->resultset(\'Users\')->search( {login => $params->param( \'login\' )});
+		if( $rs->count ){
+			$self->stash->{error} = \'Пользователь с таким именем уже существует.\';
+		}
+	else {
+			my $param = {map {$_ => $params->param($_)} qw/login email password/};
+			$param->{activationid} = Data::UUID->new->create_str(); 
+			my $user = $model->resultset(\'Users\')->create( $param );
+			$user->insert();
+			$self->{app}->{session}->data( logged => $user->id );
+			$self->{app}->{session}->flush;
+			$self->stash->{good_reg} = 1;
+			$self->stash->{user} = $self->{app}->{user} = $user;
+			use Utils::Mailer;
+			Utils::Mailer->send_email({
+				site_name => $self->{app}->{config}->get( \'site_name\' ),
+				from => $self->{app}->{config}->get( \'EMAIL_FROM\' ),
+				to => $user->email,
+				tname => \'register_user\',
+				user => $user,
+			});
+# TODO: Редиректим на back или на стартовую
+#			return $self->redirect_to(\'/user/registration\')->render_text(\'Login ok redirecting!\');
+		}
+	}
+	$self->render();' where name='registration' && module_name = 'user';;
+
+delete from pages where module_name='user' && name = 'activation';;
+
+insert into pages values( '24','activation','user','Активация аккаунта',NULL,'use Utils::Mailer;
+my $self = shift;
+my $rs = $self->{app}->{model}->resultset( \'Users\' );
+my $user = $rs->search({activationid => $self->stash->{id}})->first();
+if( $user ){
+    $user->update( {activationid => \'\' });
+    $self->app->{session}->data( error => \'Вы пришли по неверной ссылке или ваш аккаунт был ранее активирован.\' );
+}
+else {
+    $self->app->{session}->data( message => \'Ваш аккаунт успешно активирован.\' );
+    $self->app->{session}->data( logged => $user->id );
+    Utils::Mailer->send_email({
+        site_name => $self->{app}->{config}->get( \'site_name\' ),
+        from => $self->{app}->{config}->get( \'EMAIL_FROM\' ),
+        to => $user->email,
+        tname => \'success_activate\',
+        user => $user,
+    });
+}
+$self->app->{session}->flush();
+return $self->redirect_to( \'/\' );',NULL,'1',NULL,NULL );;

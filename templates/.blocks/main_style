@@ -107,7 +107,7 @@
 [% PROCESS block_header title = it.name %]
 <div class="[% s.controller == 'shop' ? 'show_shop_ent' : 'show_gal_ent' %]">
     <div class="more_[% s.controller == 'shop' ? 'shop' : 'gal' %]"><a href="/galery/bigshow/[% it.id %]"><img src="/images/more.jpg" border=0></a></div>
-    [% IF it.owner == s.user.id %]
+    [% IF it.owner.id == s.user.id %]
     <div class="add_to_[% s.controller == 'shop' ? 'shop' : 'gal' %]"><a href="/galeryfoto/add/[% it.id %]"><img src="/images/add_img.jpg" border=0></a></div>
     <div class="edit_[% s.controller == 'shop' ? 'shop' : 'gal' %]"><a href="/galery/edit/[% it.id %]"><img src="/images/edit_img.jpg" border=0></a></div>
     [% END %]

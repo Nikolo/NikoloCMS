@@ -1,0 +1,26 @@
+update pages set code='use Utils::nikolo qw(check_template write_file);
+my $self = shift;
+	if( $self->stash->{id} ){
+		my $path = $self->app->{config}->get( \'main_block_template\' ).\'/\'.$self->stash->{id};
+		open my $FH, \'< \', $path;
+		my $text;
+		while( <$FH> ){
+			$text .= $_;
+		}
+		close( $FH );
+		$text = decode( \'utf8\', $text );
+		$self->stash->{template_text} = $text;
+		if( $self->{tx}->req->{method} eq \'POST\' ){
+			my $new_text = $self->{tx}->req->param( \'template_text\' ); 
+			if( $self->stash->{error} = check_template( $self->app->{config}->get( \'main_block_template\' ), \\$new_text )||write_file( $path, $new_text )){
+				$self->stash->{template_text} = $new_text;
+			}
+			else {
+				return $self->redirect_to( \'/manager/templates\' )->render_text( \'Redirecting!\' );
+			}
+		}
+	}
+	else {
+		$self->stash->{dir} = [grep {$_ !~ /^..?$/} IO::Dir->new( $self->app->{config}->get( \'main_block_template\' ))->read()];
+	}
+	return;' where module_name='manager' and name='templates';;

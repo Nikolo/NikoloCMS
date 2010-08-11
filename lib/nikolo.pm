@@ -36,6 +36,7 @@ sub startup {
 		$self->{session} = MojoX::Session->new(
         	store		=> MojoX::Session::Store::Dbi->new( dbh  => $self->{model}->storage->dbh ),
         	transport	=> MojoX::Session::Transport::Cookie->new,
+			expires_delta   => 60*60*24*30,
     	);
 	};
 	$self->log->error( "Error while init session: ".$@ ) if $@;
@@ -51,6 +52,7 @@ sub startup {
 
 	$renderer->default_handler( 'tt' );
 	$renderer->types->type( 'tt' => 'text/html' );
+	$renderer->types->type( 'shtml' => 'text/html' );
 	$renderer->encoding( 'utf8' );
 	$renderer->add_handler( {'tt' => sub { 
 		my ($self_h, $c, $output, $options) = @_;

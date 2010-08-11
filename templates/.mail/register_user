@@ -1,0 +1,18 @@
+[% IF NEED_SUBJECT %]
+Добро пожаловать на [% stash.site_name %]!
+[% ELSIF NEED_TEXT %]
+Добро пожаловать на сайт <a href="http://[% stash.site_name %]/">http://[% stash.site_name %]/</a>!<br>
+<br>
+Вы зарегистрировались на сайте [% stash.site_name %] под именем [% stash.user.login %]!
+Для начала работы Вам необходимо активировать Вашу учетную запись. Для этого перейдите по ссылке:<br><br>
+<a href="http://[% stash.site_name %]/user/activation/[% stash.user.activationid %]">http://[% stash.site_name %]/user/activation/[% stash.user.activationid %]</a><br>
+<br>
+Если данное письмо пришло к Вам по ошибке, и Вы не регистрировались на [% stash.site_name %], то просто удалите это письмо. <br>
+<br>
+<br>
+
+--
+С уважением,<br>
+Администрация  [% stash.site_name %]<br>
+[% END %]
+

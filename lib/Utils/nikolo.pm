@@ -108,7 +108,7 @@ sub restore {
 		$sql .= $_;
 	}	
 	close $RESTORE;
-	$dbh->do( $_ ) for grep {$_ !~ /^\s*$/} split /;;\n\n/mg, $sql;
+	$dbh->do( $_ ) for grep {$_ !~ /^\s*$/} split /;;\r?\n\r?\n/mg, $sql;
 	return ;
 }
 

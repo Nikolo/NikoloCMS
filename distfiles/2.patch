@@ -1,0 +1,53 @@
+update pages set code='my $self = shift;
+	$self->{app}->{session}->tx( $self->tx );
+	$self->{app}->{session}->load || $self->{app}->{session}->create;
+    $self->{app}->{session}->extend_expires;
+# Только проверка авторизации, вход на прямую невозможен!
+	die Mojo::Exception->new( \'Произошла непредвиденная ситуация!\' ) if $self->stash->{controller} eq \'user\' && $self->stash->{action} eq \'init_user\';
+# Проверим жива ли сессия у пользователя
+	$self->stash->{$_} = $self->{app}->{session}->flash( $_ ) for qw( error warning result );
+        $self->{app}->{session}->flush();
+	if( $self->{app}->{session}->data->{logged} ){
+		$self->stash->{user} = $self->{app}->{user} = $self->{app}->{model}->resultset(\'Users\')->find( $self->{app}->{session}->data->{logged} );
+	}
+        my $page = $self->{app}->{model}->resultset(\'Pages\')->search( { module_name => $self->stash->{controller}, name => $self->stash->{action} }, {select => [\'id\', \'flags\']})->next;
+         return $self->app->static->serve_404($self) unless $page;
+eval {
+        my $pages = [$self->{app}->{model}->resultset(\'Pages\')->search(
+            { -and => [
+                menu_pos => {\'>\', 0}, 
+                -or => [
+                    ($self->stash->{user} && $self->stash->{user}->groups->search({ \'name\' => \'wheel\' })->count() ? ( \'1\' => \'1\' ) : (\'roles.user\' => ($self->stash->{user} ? $self->stash->{user}->id : -1 ))),
+                    \'flags\' => { \'&\' => 2**0 },
+                ],
+            ]},
+            { 
+                join => { acls => {grp => \'roles\'} },
+                select => [qw/menu_name me.name module_name/],
+                order_by => \'menu_pos\',
+            })->all()];
+#use Data::Dumper;
+#die Dumper( map $_->title(), @$pages );
+        $self->stash->{menu} =[ map { keyword => $_->module_name.$_->name, link => \'/\'.$_->module_name.\'/\'.$_->name, name => $_->menu_name }, @$pages ];
+};
+$self->stash->{error} = $@ if $@;
+        return 1 if ($page->flags & 2**0)||($self->stash->{user} && ( $self->stash->{user}->groups->search({ \'name\' => \'wheel\' })->count() || scalar( $page->groups->search({ \'roles.user\' => $self->stash->{user}->id }, {join =>[ qw/roles/ ]})->count())));
+
+	$self->stash->{returnto} = $self->tx->req->url->path->to_string||$self->tx->req->param( \'returnto\' );
+        $self->stash->{page_name} = $page->title;
+	$self->render( \'user/init_user\' );
+	return;
+' where module_name='user' and name='init_user';;
+
+update pages set template = '[% PROCESS head %]
+<table>
+[% FOREACH user = s.users %]
+    <tr>
+        <td>[% user.login %]</td>
+        <td>[% user.email %]</td>
+        <td><a href="/user/view/[% user.id %]">Посмотреть</a><br></td>
+        [% IF s.is_wheel %]<td><a href="/user/edit/[% user.id %]">Редактировать</a><br></td>[% END %]
+    </tr>
+[% END %]
+</table>
+[% PROCESS footer %]' where module_name='user' and name = 'list';;

@@ -1,0 +1,18 @@
+[% IF NEED_SUBJECT %]
+Поздравляем с успешной активацией!
+[% ELSIF NEED_TEXT %]
+Уважаемый(ая) [% stash.user.firstname %],<br>
+<br>
+[% stash.site_name %] сообщает об активации вашего аккаунта. <br>
+<br>
+Примечание: не забывайте, что пароль чувствителен к регистру (проверяйте Caps Lock при вводе).<br>
+<br>
+Для редактирования вашего профиля, перейдите по ссылке:
+<a href="http://[% stash.site_name%]/user/edit/">http://[% stash.site_name%]/user/edit/</a><br>
+<br>
+<br>
+
+--
+С наилучшими пожеланиями,<br>
+[% stash.site_name %].<br>
+[% END %]
