@@ -105,7 +105,18 @@ my $self = shift;
 		return $self->redirect_to( \'/manager/mail_templates/\'.$cr )->render_text( \'Redirecting!\' );
 	}
 	else {
-		$self->stash->{dir} = [grep {$_ !~ /^..?$/} IO::Dir->new( $self->app->{config}->get( \'main_mail_template\' ))->read()];
+		my $dir = IO::Dir->new($self->app->{config}->get( \'main_mail_template\' ));
+		if( $dir ){
+			$self->stash->{dir} = [grep {$_ !~ /^..?$/} $dir->read()];
+		}
+		else {
+			if( my $path = $self->app->{config}->get( \'main_mail_template\' ) ){ 
+				$self->app->{session}->data( error => \'Папки \'.$path.\' не существует, возможно вы неверно указали путь.\' );
+			}
+			else {
+				$self->app->{session}->data( error => \'Вы не указали путь к папке с шаблонами main_mail_template в конфигурации\' );
+			}
+		}
 	}
 	return;',NULL,NULL,NULL,NULL );;
 
