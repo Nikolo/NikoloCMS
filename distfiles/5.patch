@@ -63,7 +63,7 @@ my $self = shift;
 
 delete from pages where module_name='user' && name = 'activation';;
 
-insert into pages values( '24','activation','user','Активация аккаунта',NULL,'use Utils::Mailer;
+insert into pages values( NULL,'activation','user','Активация аккаунта',NULL,'use Utils::Mailer;
 my $self = shift;
 my $rs = $self->{app}->{model}->resultset( \'Users\' );
 my $user = $rs->search({activationid => $self->stash->{id}})->first();

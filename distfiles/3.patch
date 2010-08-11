@@ -118,7 +118,7 @@ my $self = shift;
 				$self->app->{session}->data( error => \'Вы не указали путь к папке с шаблонами main_mail_template в конфигурации\' );
 			}
 			$self->app->{session}->flush();
-			return redirect_to( \'/manager\' )->render_text( \'Error read dir\' );
+			return $self->redirect_to( \'/manager\' )->render_text( \'Error read dir\' );
 		}
 	}
 	return;',NULL,NULL,NULL,NULL );;
