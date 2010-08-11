@@ -105,7 +105,7 @@ my $self = shift;
 		return $self->redirect_to( \'/manager/mail_templates/\'.$cr )->render_text( \'Redirecting!\' );
 	}
 	else {
-		my $path = $self->app->{config}->get( \'main_mail_template\' )
+		my $path = $self->app->{config}->get( \'main_mail_template\' );
 		my $dir = IO::Dir->new( $path );
 		if( $dir ){
 			$self->stash->{dir} = [grep {$_ !~ /^..?$/} $dir->read()];
