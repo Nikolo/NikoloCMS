@@ -73,7 +73,7 @@ insert into pages values( NULL,'mail_templates','manager',NULL,'[% PROCESS head 
 			<input type="text" name="id">
 			<input type="submit" value="Создать">
 		</form>
-[% ELSEIF !s.error %]
+[% ELSE %]
 	<form method="POST">
 		<textarea name="template_text" style="height: 350px; width: 100%">[% s.template_text | html %]</textarea><br>
 		<input type="submit" value="Обновить">
@@ -118,6 +118,7 @@ my $self = shift;
 				$self->app->{session}->data( error => \'Вы не указали путь к папке с шаблонами main_mail_template в конфигурации\' );
 			}
 			$self->app->{session}->flush();
+			return redirect_to( \'/manager\' )->render_text( \'Error read dir\' );
 		}
 	}
 	return;',NULL,NULL,NULL,NULL );;
