@@ -73,7 +73,7 @@ insert into pages values( NULL,'mail_templates','manager',NULL,'[% PROCESS head 
 			<input type="text" name="id">
 			<input type="submit" value="Создать">
 		</form>
-[% ELSE %]
+[% ELSEIF !s.error %]
 	<form method="POST">
 		<textarea name="template_text" style="height: 350px; width: 100%">[% s.template_text | html %]</textarea><br>
 		<input type="submit" value="Обновить">
@@ -105,17 +105,19 @@ my $self = shift;
 		return $self->redirect_to( \'/manager/mail_templates/\'.$cr )->render_text( \'Redirecting!\' );
 	}
 	else {
-		my $dir = IO::Dir->new($self->app->{config}->get( \'main_mail_template\' ));
+		my $path = $self->app->{config}->get( \'main_mail_template\' )
+		my $dir = IO::Dir->new( $path );
 		if( $dir ){
 			$self->stash->{dir} = [grep {$_ !~ /^..?$/} $dir->read()];
 		}
 		else {
-			if( my $path = $self->app->{config}->get( \'main_mail_template\' ) ){ 
+			if( $path ){ 
 				$self->app->{session}->data( error => \'Папки \'.$path.\' не существует, возможно вы неверно указали путь.\' );
 			}
 			else {
 				$self->app->{session}->data( error => \'Вы не указали путь к папке с шаблонами main_mail_template в конфигурации\' );
 			}
+			$self->app->{session}->flush();
 		}
 	}
 	return;',NULL,NULL,NULL,NULL );;
