@@ -586,7 +586,7 @@ my $self = shift;
 				site_name => $self->{app}->{config}->get( \'site_name\' ),
 				from => $self->{app}->{config}->get( \'EMAIL_FROM\' ),
 				to => $user->email,
-				tname => register_user,
+				tname => \'register_user\',
 				user => $user,
 			});
 # TODO: Редиректим на back или на стартовую
