@@ -3,7 +3,7 @@
 use strict;
 use lib 'lib';
 use Utils::nikolo qw(rebuild_module restore);
-use Model::Schema;
+use Model::Schema qw(1);
 use Config::JSON;
 use utf8;
 
@@ -14,6 +14,9 @@ my $schema = Model::Schema->connect( $db_conf->{dsn}, $db_conf->{user}, $db_conf
 my $dbh = $schema->storage->dbh;
 
 restore( $config->get( 'path' ).'distfiles/install.dump', $dbh );
+
+Model::Schema->load_namespaces();
+$schema = Model::Schema->connect( $db_conf->{dsn}, $db_conf->{user}, $db_conf->{password}, $db_conf->{params} );
 
 my $rs = $schema->resultset('Pages');
 my $module_list = [$rs->search( undef, { select => [ 'module_name' ], distinct => 1 } )->all()];

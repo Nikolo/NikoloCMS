@@ -583,8 +583,8 @@ my $self = shift;
 			$self->stash->{user} = $self->{app}->{user} = $user;
 			use Utils::Mailer;
 			Utils::Mailer->send_email({
-				site_name => $self->{app}->{config}->get( 'site_name' ),
-				from => $self->{app}->{config}->get( 'EMAIL_FROM' ),
+				site_name => $self->{app}->{config}->get( \'site_name\' ),
+				from => $self->{app}->{config}->get( \'EMAIL_FROM\' ),
 				to => $user->email,
 				tname => register_user,
 				user => $user,
