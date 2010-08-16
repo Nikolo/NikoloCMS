@@ -127,6 +127,132 @@ insert into pages values( NULL,'insert','manager','Добавление поль
 	}
     return;',NULL,NULL,NULL,NULL );;
 
+insert into pages values( NULL,'images','manager','Управление изображениями','[% PROCESS head %]
+<h2>Управление изображениями (Текущий путь: [% s.local_path||\'/\' %])</h2>
+[% IF s.NEED_CONFIRM %]
+Вы должны подтвердить удаление [% IF s.is_dir %]каталога [% s.filename %] и <font color="red">всего его содержимого</font>![% ELSE %]файла [% s.filename %][% END %].ges/delete">
+<input type="hidden" name="path" value="[% s.local_path %]">
+<input type="hidden" name="filename" value="[% s.filename %]">
+<input type="submit" value="Подтверждаю!">
+</form>
+<h3><a href="/manager/images?path=[% s.local_path %]">Не удалять!</a></h3>
+[% ELSE %]
+[% IF s.dir %]
+<form action="/manager/images/create" method=POST><input type="hidden" name="path" value="[% s.local_path %]"><input type="text" name="new_folder"><input type="submit" value="Создать каталог"></form>
+<form enctype="multipart/form-data" action="/manager/images/create" method=POST><input type="hidden" name="path" value="[% s.local_path %]"><input type="file" name="new_file"><input type="submit" value="Загрузить файл"></form>
+<table style="background: #A0A0A0" cellpadding=3 cellspacing=1>
+<tr>
+<th style="background: #FFFFFF">Имя</th>
+<th style="background: #FFFFFF">Картинка</th>
+<th style="background: #FFFFFF">код для вставки на страницу</th>
+<th style="background: #FFFFFF">действия</th>
+</tr>
+[% FOREACH ent = s.dir %]
+<tr>
+[% IF ent.is_dir %]
+<td style="background: #FFFFFF"><b><a href="/manager/images?path=[% s.local_path %]/[% ent.name %]">[% ent.name %]/</a></b></td>
+<td style="background: #FFFFFF"><img src="/images/folder.gif"></td>
+<td style="background: #FFFFFF"> - </td>
+<td style="background: #FFFFFF"><a href="/manager/images/delete?path=[% s.local_path %]&del_file=[% ent.name %]">Удалить</a></td>
+[% ELSE %]
+<td style="background: #FFFFFF">[% ent.name %]</td>
+<td style="background: #FFFFFF"><img style="max-width: 220px;" src="/images[% s.local_path %]/[% ent.name %]"></td>
+<td style="background: #FFFFFF">&lt;img src=&quot;/images[% s.local_path %]/[% ent.name %]&quot;&gt;</td>
+<td style="background: #FFFFFF"><a href="/manager/images/delete?path=[% s.local_path %]&del_file=[% ent.name %]">Удалить</a></td>
+[% END %]
+[% END %]
+[% END %]
+[% END %]
+[% PROCESS footer %]','use Cwd qw(realpath);
+use File::Path qw(make_path remove_tree);
+my $self = shift;
+my $path = $self->app->{config}->get( \'path\' ).\'public/images/\'.($self->{tx}->req->param( \'path\' )||\'\');
+my $check_path = realpath( $self->app->{config}->get( \'path\' ).\'public/images/\');
+if( realpath( $path ) =~ /^$check_path/ ){
+        $self->stash->{local_path} = realpath( $path );
+        $self->stash->{local_path} =~ s/^$check_path//i;
+        if( $self->{tx}->req->{method} eq \'POST\' ){
+                if( $self->stash->{id} eq \'create\' ){
+                        if( $self->{tx}->req->param( \'new_folder\' )){
+                                my $cr_path = $path."/".$self->{tx}->req->param( \'new_folder\' );
+                                if( realpath( $cr_path ) !~ /^$check_path/ ){
+                                        $self->app->{session}->data( error => \'Нельзя выходить за пределы папки images\' );
+                                }
+                                elsif( -d $cr_path || -f $cr_path ){
+                                        $self->app->{session}->data( error => \'Указанный путь существует\' );
+                                }
+                                else{
+                                        make_path( $cr_path, {error => \my $err} );
+                                        if( @$err ){
+                                                $self->app->{session}->data( error => join \'<br>\', map(($_->{file}||\'Error\').": ".$_->{message}, @$err));
+                                        }
+                                        else{
+                                                $self->app->{session}->data( message => \'Каталог успешно создан\' );
+                                        }
+                                }
+                        }
+                        elsif( my $upload = $self->{tx}->req->upload( \'new_file\' )){
+                                $upload->move_to( $path.\'/\'.$upload->filename );
+                                $self->app->{session}->data( message => \'Файл успешно загружен.\' );
+                        }
+                        else{
+                                $self->app->{session}->data( error => \'Вы не заполнили ни одного поля.\' );
+                        }
+                }
+                elsif( $self->stash->{id} eq \'delete\' ){
+                        my $del_path = $path."/".$self->{tx}->req->param( \'filename\' );
+                        if( realpath( $del_path ) !~ /^$check_path/ ){
+                                $self->app->{session}->data( error => \'Нельзя выходить за пределы папки images\' );
+                        }
+                        elsif( !-f $del_path && !-d $del_path ){
+                                $self->app->{session}->data( error => \'Файл не существует\');
+                        }
+                        else {
+                                if( -d $del_path ){
+                                        remove_tree( $del_path, {error => \my $err} );
+                                        if( @$err ){
+                                                $self->app->{session}->data( error => join \'<br>\', map(($_->{file}||\'Error\').": ".$_->{message}, @$err));
+                                        }
+                                                                                else{
+                                                $self->app->{session}->data( message => \'Каталог успешно удален\' );
+                                        }
+                                }
+                                else{
+                                        unlink( $del_path );
+                                        $self->app->{session}->data( message => \'Файл успешно удален\' );
+                                }
+                        }
+                }
+                $self->app->{session}->flush();
+                return $self->redirect_to( \'/manager/images?path=\'.$self->stash->{local_path} );
+        }
+        if( $self->stash->{id} eq \'delete\' ){
+                my $del_path = $path."/".$self->{tx}->req->param( \'del_file\' );
+                if( realpath( $del_path ) !~ /^$check_path/ ){
+                        $self->stash->{error} = \'Нельзя выходить за пределы папки images\';
+                }
+                elsif( !-f $del_path && !-d $del_path ){
+                        $self->stash->{error} = \'Файл не существует\';
+                }
+                else {
+                        $self->stash->{NEED_CONFIRM} = 1;
+                        $self->stash->{filename} = $self->{tx}->req->param( \'del_file\' );
+                        $self->stash->{is_dir} = -d $del_path;
+                }
+        }
+        my $dir = IO::Dir->new( $path );
+        if( $dir ){
+                $self->stash->{dir} = [sort {$b->{is_dir} <=> $a->{is_dir} } map {name => $_, is_dir => -d $path.\'/\'.$_}, grep {$self->stash->{local_path} || $_ !~ /^..?$/} $dir->read()];
+        }
+        else{
+                $self->stash->{error} = \'Папки \'.$path.\' не существует, возможно вы пришли по неверной ссылке\';
+        }
+}
+else{
+        $self->stash->{error} = \'Нельзя выходить за пределы папки images\';
+}
+return;',NULL,NULL,NULL,NULL );;
+
 insert into pages values( NULL,'list','manager','Список пользовательских','[% PROCESS head %]
 [% IF s.id %]
 <table>
