@@ -674,7 +674,7 @@ $self->app->{session}->flush();
 return $self->redirect_to( \'/manager/list\' )->render_text( \'Redirecting!\' );
 ',NULL,NULL,NULL,NULL );;
 
-insert into pages values( '16','list','user','Список пользователей','[% PROCESS head %]
+insert into pages values( NULL,'list','user','Список пользователей','[% PROCESS head %]
 <table>
 [% FOREACH user = s.users %]
     <tr>
