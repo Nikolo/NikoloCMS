@@ -13,7 +13,9 @@ my $db_conf = $config->get( 'db' );
 my $schema = Model::Schema->connect( $db_conf->{dsn}, $db_conf->{user}, $db_conf->{password}, $db_conf->{params} );
 my $dbh = $schema->storage->dbh;
 
-my @patchs = @_;
+my @patchs;
+
+while( $_ = shift ){ push @patchs, $_ };
 unless( scalar @patchs ){
 	while( <STDIN> ){
 		chomp;
