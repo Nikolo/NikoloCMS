@@ -6,7 +6,7 @@ $self->stash->{page} = $rs->find( $self->stash->{id} );
 $self->stash->{page_grps} = [map $_->id, $self->stash->{page}->groups->all()];
 $self->stash->{grps} = [$self->app->{model}->resultset(\'Groups\')->all()];
 if( $self->{tx}->req->{method} eq \'POST\' ){
-    my %params = map {$_ => $self->{tx}->req->param( $_ )} qw/title menu_pos menu_name template code/;
+    my %params = map {$_ => $self->{tx}->req->param( $_ )} qw/title menu_pos bridge_pos menu_name template code/;
     $params{flags} = 0;
     $params{flags} |= $_ for $self->{tx}->req->param( \'flags\' );
     $self->stash->{page}->update( \%params );
