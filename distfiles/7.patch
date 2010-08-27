@@ -1,0 +1,27 @@
+update pages set code = 'use Utils::nikolo qw(rebuild_module);
+my $self = shift;
+my $rs = $self->app->{model}->resultset(\'Pages\');
+#TODO: AJAX вызов типа посмотреть как будет выглядеть
+$self->stash->{page} = $rs->find( $self->stash->{id} );
+$self->stash->{page_grps} = [map $_->id, $self->stash->{page}->groups->all()];
+$self->stash->{grps} = [$self->app->{model}->resultset(\'Groups\')->all()];
+if( $self->{tx}->req->{method} eq \'POST\' ){
+    my %params = map {$_ => $self->{tx}->req->param( $_ )} qw/title menu_pos menu_name template code/;
+    $params{flags} = 0;
+    $params{flags} |= $_ for $self->{tx}->req->param( \'flags\' );
+    $self->stash->{page}->update( \%params );
+    $self->stash->{page}->set_groups( [ map +{id => $_}, $self->{tx}->req->param( \'group\' )] );
+    my $redirect = $self->{tx}->req->param( \'this_page\' ) ? \'/manager/update/\'.$self->stash->{id} : \'/manager/list/\'.($self->stash->{page}->module_name );
+my $module_pages = {map { $_->name => { text => $_->code, title => $_->title }} $rs->search({ module_name => $self->stash->{page}->module_name }, {select => [ \'module_name\', \'name\', \'code\', \'template\', \'title\' ]})->all() };
+if( my $err = $self->stash->{page}->create_template( $self->app->{config}->get( \'path\' ), $self->app->{config}->get( \'main_block_template\' ) )||rebuild_module( $self->app->{config}->get( \'path\' ), ucfirst($self->stash->{page}->module_name), $module_pages )){			$self->app->{session}->data( \'error\' => $err );
+            $redirect = \'/manager/update/\'.$self->stash->{id};
+		}
+		else {
+			$self->app->{session}->data( result => \'Страница \'.($self->stash->{page}->name).\' в разделе \'.($self->stash->{page}->module_name).\' успешно изменена\' );
+		}
+
+        $self->app->{session}->flush();
+        return $self->redirect_to( $redirect )->render_text( \'Redirecting!\' );
+
+	}
+    return;' where module_name='manager' && name='update';;
