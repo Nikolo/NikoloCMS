@@ -334,6 +334,7 @@ insert into pages values( NULL,'update','manager','Редактирование 
         [% END %]    
         Название страницы: <input type="text" name="title" value="[% s.page.title %]"><br>
         Позиция в меню: <input type="text" name="menu_pos" value="[% s.page.menu_pos %]"><br>
+        Позиция в списке обработчиков: <input type="text" name="bridge_pos" value="[% s.page.bridge_pos %]"><br>
         Имя в меню: <input type="text" name="menu_name" value="[% s.page.menu_name %]"><br>
         Группы:<br>
         [% FOREACH grp = s.grps %]
