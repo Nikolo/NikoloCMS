@@ -24,7 +24,7 @@ if( my $err = $self->stash->{page}->create_template( $self->app->{config}->get( 
         return $self->redirect_to( $redirect )->render_text( \'Redirecting!\' );
 
 	}
-    return;', template = 'Редактирование пользовательской страницы','[% PROCESS head %]
+    return;', template = '[% PROCESS head %]
 <form method=\'POST\'>
         Флаги:<br> [% FOREACH fl = s.page.extract_flags %]
               [% fl.name %]<input type="checkbox" name="flags" value="[% fl.id %]" [% IF fl.isset %]checked[% END %]><br>
