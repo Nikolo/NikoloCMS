@@ -641,7 +641,6 @@ eval {
                 ],
             ]},
             { 
-                join => { acls => {grp => \'roles\'} },
                 select => [qw/menu_name me.name module_name/],
                 order_by => \'menu_pos\',
             })->all()];
