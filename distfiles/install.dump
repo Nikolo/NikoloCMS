@@ -621,7 +621,7 @@ insert into pages values( NULL,'init_user','user','Вход в защищенн�
 	$self->{app}->{session}->load || $self->{app}->{session}->create;
     $self->{app}->{session}->extend_expires;
 # Только проверка авторизации, вход на прямую невозможен!
-	die Mojo::Exception->new( \'Произошла непредвиденная ситуация!\' ) if $self->stash->{controller} eq \'user\' && $self->stash->{action} eq \'init_user\';
+#	die Mojo::Exception->new( \'Произошла непредвиденная ситуация!\' ) if $self->stash->{controller} eq \'user\' && $self->stash->{action} eq \'init_user\';
 # Проверим жива ли сессия у пользователя
 	$self->stash->{$_} = $self->{app}->{session}->flash( $_ ) for qw( error warning result );
         $self->{app}->{session}->flush();
