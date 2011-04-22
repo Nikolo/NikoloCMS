@@ -51,10 +51,11 @@ sub startup {
 	my $renderer = $self->renderer;
 
 	$renderer->default_handler( 'tt' );
-	$renderer->types->type( 'tt' => 'text/html' );
-	$renderer->types->type( 'shtml' => 'text/html' );
+	$self->types->type( 'tt' => 'text/html' );
+	$self->types->type( 'shtml' => 'text/html' );
+	$self->secret( 'cookie_sign' );
 	$renderer->encoding( 'utf8' );
-	$renderer->add_handler( {'tt' => sub { 
+	$renderer->add_handler( 'tt' => sub { 
 		my ($self_h, $c, $output, $options) = @_;
 		$c->tx->res->headers->content_type( "text/html; charset=$charset" );
 		use Template;
@@ -85,7 +86,7 @@ sub startup {
 			}
 			return 1;
 		}
-	}});
+	});
 	my @bridges = $self->{model}->resultset('Pages')->search(
             { bridge_pos => {'>', 0} },
             { select => [qw/name module_name/],
