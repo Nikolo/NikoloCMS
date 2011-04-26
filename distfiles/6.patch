@@ -3,7 +3,8 @@ delete from pages where name='images' && module_name='manager';;
 insert into pages values( NULL,'images','manager','Управление изображениями','[% PROCESS head %]
 <h2>Управление изображениями (Текущий путь: [% s.local_path||\'/\' %])</h2>
 [% IF s.NEED_CONFIRM %]
-Вы должны подтвердить удаление [% IF s.is_dir %]каталога [% s.filename %] и <font color="red">всего его содержимого</font>![% ELSE %]файла [% s.filename %][% END %].ges/delete">
+Вы должны подтвердить удаление [% IF s.is_dir %]каталога [% s.filename %] и <font color="red">всего его содержимого</font>![% ELSE %]файла [% s.filename %][% END %]
+<form method="POST" actio="/images/delete">
 <input type="hidden" name="path" value="[% s.local_path %]">
 <input type="hidden" name="filename" value="[% s.filename %]">
 <input type="submit" value="Подтверждаю!">

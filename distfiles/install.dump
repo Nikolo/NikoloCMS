@@ -131,7 +131,8 @@ insert into pages values( NULL,'insert','manager','Добавление поль
 insert into pages values( NULL,'images','manager','Управление изображениями','[% PROCESS head %]
 <h2>Управление изображениями (Текущий путь: [% s.local_path||\'/\' %])</h2>
 [% IF s.NEED_CONFIRM %]
-Вы должны подтвердить удаление [% IF s.is_dir %]каталога [% s.filename %] и <font color="red">всего его содержимого</font>![% ELSE %]файла [% s.filename %][% END %].ges/delete">
+Вы должны подтвердить удаление [% IF s.is_dir %]каталога [% s.filename %] и <font color="red">всего его содержимого</font>![% ELSE %]файла [% s.filename %][% END %]
+<form method="POST" actio="/images/delete">
 <input type="hidden" name="path" value="[% s.local_path %]">
 <input type="hidden" name="filename" value="[% s.filename %]">
 <input type="submit" value="Подтверждаю!">
@@ -621,7 +622,7 @@ insert into pages values( NULL,'init_user','user','Вход в защищенн�
 	$self->{app}->{session}->load || $self->{app}->{session}->create;
     $self->{app}->{session}->extend_expires;
 # Только проверка авторизации, вход на прямую невозможен!
-	die Mojo::Exception->new( \'Произошла непредвиденная ситуация!\' ) if $self->stash->{controller} eq \'user\' && $self->stash->{action} eq \'init_user\';
+#	die Mojo::Exception->new( \'Произошла непредвиденная ситуация!\' ) if $self->stash->{controller} eq \'user\' && $self->stash->{action} eq \'init_user\';
 # Проверим жива ли сессия у пользователя
 	$self->stash->{$_} = $self->{app}->{session}->flash( $_ ) for qw( error warning result );
         $self->{app}->{session}->flush();
@@ -640,7 +641,6 @@ eval {
                 ],
             ]},
             { 
-                join => { acls => {grp => \'roles\'} },
                 select => [qw/menu_name me.name module_name/],
                 order_by => \'menu_pos\',
             })->all()];
@@ -670,7 +670,7 @@ my @srcs = $self->app->{model}->sources;
 $self->stash->{id} = \'\' if $self->stash->{id} =~ m{/};
 
 my $file = $self->stash->{id}||"schema_".time().".dump";
-_backup( \@srcs, $self->app->{config}->get(\'path\')."/backup/".$file, $self->app->{model}->storage->dbh );
+_backup( \\@srcs, $self->app->{config}->get(\'path\')."/backup/".$file, $self->app->{model}->storage->dbh );
 
 $self->app->{session}->data( result => "Резервная копия(".$self->app->{config}->get(\'path\')."/backup/".$file.") создана успешно.");
 $self->app->{session}->flush();
