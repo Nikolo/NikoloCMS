@@ -2,7 +2,7 @@
 	"db"  : {
 	    "dsn" : "DBI:mysql:nikolo",
 	    "user" : "nikolo",
-	    "password" : "nikolo",
+	    "password" : "",
         "params" : {
             "mysql_enable_utf8" : "1",
         },
@@ -11,17 +11,17 @@
 	"charset" : "utf-8",
 
 #ToDo: надо путь автоматом вычислять
-	"path" : "",
+	"path" : "/usr/local/www/NikoloCMS/",
 
 	"site_name" : "",
 
-	"main_block_template" : "",
+	"main_block_template" : "/usr/local/www/NikoloCMS/templates/.blocks/",
 
-	"main_mail_template" : "",
+	"main_mail_template" : "/usr/local/www/NikoloCMS/templates/.mail/",
 
-	"distfiles" : "",
+	"distfiles" : "/usr/local/www/NikoloCMS/distfiles/",
 
-	"title_prefix" : "nikolo - ",
+	"title_prefix" : "nikoloCMS - ",
 
 	"SAPE_CONF"	   : {
 		"user" : "",
@@ -32,3 +32,4 @@
 	"ENABLE_SAPE_CONTEXT" : "0",
 	"EMAIL_FROM" : "",
 }
+

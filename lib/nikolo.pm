@@ -13,6 +13,7 @@ use Model::Profiler;
 # This method will run once at server start
 sub startup {
     my $self = shift;
+#	chdir( $ENV{MOJO_HOME}.'/bin' );
 
     # Routes
     my $r = $self->routes;
@@ -20,7 +21,7 @@ sub startup {
 	# Config
 	eval "use Model::Schema;";
 	eval {
-		$self->{config} = Config::JSON->new( '../nikolo.cfg' );
+		$self->{config} = Config::JSON->new( $ENV{MOJO_HOME}.'/nikolo.cfg' );
 		my $db_conf = $self->{config}->get( 'db' );
 		$self->{model} = Model::Schema->connect( $db_conf->{dsn}, $db_conf->{user}, $db_conf->{password}, $db_conf->{params} );
 		if( $db_conf->{profiler} ){
@@ -29,8 +30,9 @@ sub startup {
 			$self->{model}->storage->debugfh($self->log->handle);
 		}
 	};
-
-	$self->log->error( "Error while init model: ".$@ ) if $@;
+use Cwd qw(realpath);
+use Data::Dumper;
+	$self->log->error( "Error while init model: ".realpath( './').": ".Dumper( \%ENV ).": ".$@ ) if $@;
 	$self->log->error( "Model not initialized " ) unless $self->{model};
 	eval {
 		$self->{session} = MojoX::Session->new(

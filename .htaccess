@@ -1,4 +1,3 @@
 RewriteEngine On
-Options +FollowSymlinks
-RewriteRule ^bin/nikolo.cgi - [L]
-RewriteRule ^(.*)$ bin/nikolo.cgi/$1 [L,QSA]
+RewriteRule ^bin/nikolo.psgi - [L]
+RewriteRule ^(.*)$ bin/nikolo.psgi/$1 [L,QSA]

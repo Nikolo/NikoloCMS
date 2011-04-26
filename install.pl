@@ -13,7 +13,7 @@ my $db_conf = $config->get( 'db' );
 my $schema = Model::Schema->connect( $db_conf->{dsn}, $db_conf->{user}, $db_conf->{password}, $db_conf->{params} );
 my $dbh = $schema->storage->dbh;
 
-restore( $config->get( 'path' ).'distfiles/install.dump', $dbh );
+restore( $config->get( 'distfiles' ).'/install.dump', $dbh );
 
 Model::Schema->load_namespaces();
 $schema = Model::Schema->connect( $db_conf->{dsn}, $db_conf->{user}, $db_conf->{password}, $db_conf->{params} );
