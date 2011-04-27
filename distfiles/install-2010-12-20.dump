@@ -346,7 +346,7 @@ insert into pages values( NULL,'update','manager','Редактирование 
         Остаться на этой странице: <input type="checkbox" name="this_page"><br>
 	<input type=\'submit\' value=\'Обновить\'>
 </form>
-[% PROCESS footer %]','use Utils::nikolo qw(rebuild_module);
+[% PROCESS footer %]','use Utils::nikolo qw(rebuild_module generate_bridges);
 my $self = shift;
 my $rs = $self->app->{model}->resultset(\'Pages\');
 #TODO: AJAX вызов типа посмотреть как будет выглядеть
@@ -361,7 +361,8 @@ if( $self->{tx}->req->{method} eq \'POST\' ){
     $self->stash->{page}->set_groups( [ map +{id => $_}, $self->{tx}->req->param( \'group\' )] );
     my $redirect = $self->{tx}->req->param( \'this_page\' ) ? \'/manager/update/\'.$self->stash->{id} : \'/manager/list/\'.($self->stash->{page}->module_name );
 my $module_pages = {map { $_->name => { text => $_->code, title => $_->title }} $rs->search({ module_name => $self->stash->{page}->module_name }, {select => [ \'module_name\', \'name\', \'code\', \'template\', \'title\' ]})->all() };
-if( my $err = $self->stash->{page}->create_template( $self->app->{config}->get( \'path\' ), $self->app->{config}->get( \'main_block_template\' ) )||rebuild_module( $self->app->{config}->get( \'path\' ), ucfirst($self->stash->{page}->module_name), $module_pages )){			$self->app->{session}->data( \'error\' => $err );
+if( my $err = $self->stash->{page}->create_template( $self->app->{config}->get( \'path\' ), $self->app->{config}->get( \'main_block_template\' ) )||rebuild_module( $self->app->{config}->get( \'path\' ), ucfirst($self->stash->{page}->module_name), $module_pages ) || generate_bridges( $self->app->{model}->storage->dbh, $ENV{MOJO_HOME} )
+){			$self->app->{session}->data( \'error\' => $err );
             $redirect = \'/manager/update/\'.$self->stash->{id};
 		}
 		else {

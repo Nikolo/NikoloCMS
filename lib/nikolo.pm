@@ -9,11 +9,11 @@ use MojoX::Session::Store::Dbi;
 use MojoX::Session::Transport::Cookie;
 use MojoX::Session;
 use Model::Profiler;
+use nikolo::Bridges;
 
 # This method will run once at server start
 sub startup {
     my $self = shift;
-#	chdir( $ENV{MOJO_HOME}.'/bin' );
 
     # Routes
     my $r = $self->routes;
@@ -30,9 +30,7 @@ sub startup {
 			$self->{model}->storage->debugfh($self->log->handle);
 		}
 	};
-use Cwd qw(realpath);
-use Data::Dumper;
-	$self->log->error( "Error while init model: ".realpath( './').": ".Dumper( \%ENV ).": ".$@ ) if $@;
+	$self->log->error( "Error while init model: ".$@ ) if $@;
 	$self->log->error( "Model not initialized " ) unless $self->{model};
 	eval {
 		$self->{session} = MojoX::Session->new(
@@ -89,14 +87,12 @@ use Data::Dumper;
 			return 1;
 		}
 	});
-	my @bridges = $self->{model}->resultset('Pages')->search(
-            { bridge_pos => {'>', 0} },
-            { select => [qw/name module_name/],
-                order_by => 'menu_pos',
-            })->all();
-    foreach( @bridges ){
-    	$r = $r->bridge->to( controller => $_->module_name, action => $_->name );
+warn "skhdgflasjfhalsjfhlk";
+	my $bridges = nikolo::Bridges::get();
+    foreach( @$bridges ){
+    	$r = $r->bridge->to( controller => $_->{module_name}, action => $_->{name} );
     }
+
     # Default route
 	$r->route( '/:controller/:action/:id' )
       ->to( controller => 'main', action => 'welcome', id => 0 );

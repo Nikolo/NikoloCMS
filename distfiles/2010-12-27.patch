@@ -1,4 +1,4 @@
-update pages set code = 'use Utils::nikolo qw(rebuild_module);
+update pages set code = 'use Utils::nikolo qw(rebuild_module generate_bridges generate_bridges);
 my $self = shift;
 my $rs = $self->app->{model}->resultset(\'Pages\');
 #TODO: AJAX вызов типа посмотреть как будет выглядеть

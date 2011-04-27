@@ -5,7 +5,7 @@ use Exporter 'import';
 use Template;
 use Encode qw(encode decode);
 
-our @EXPORT_OK = qw( write_file check_template rebuild_module _backup restore);
+our @EXPORT_OK = qw( write_file check_template rebuild_module _backup restore generate_bridges);
 
 sub write_file {
 	my $path = shift;
@@ -74,6 +74,17 @@ sub rebuild_module {
 
 	return $err;
 	
+}
+
+sub generate_bridges {
+	my $dbh = shift;
+	my $path = shift;
+	my $sql = "select name, module_name from ".(Model::Schema::Result::Pages->table())." where bridge_pos > 0 order by menu_pos";
+	open my $BRIDGES, ">", $path."/lib/nikolo/Bridges.pm" or die $!;
+	printf $BRIDGES "package nikolo::Bridges;".$/.join( $/, map { "use $_;" } @std_pack );
+	printf $BRIDGES $/.'sub get {['.join( ",$/", map "{ module_name => '".$_->{module_name}."', name => '".$_->{name}."'}", @{$dbh->selectall_arrayref( $sql, {Slice => {}} )}).']};'.$/."1;".$/;
+	close $BRIDGES;
+	return 1;
 }
 
 sub _backup {
