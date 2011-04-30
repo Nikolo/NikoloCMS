@@ -11,7 +11,7 @@ sub send_email {
     	die $_." is empty" unless $params->{$_};
     }
     
-	my $tt = Template->new( { ABSOLUTE => 1, POST_CHOMP => 1, ENCODING => 'utf8', %{$params->{tt_param}} } );
+	my $tt = Template->new( { ABSOLUTE => 1, POST_CHOMP => 1, ENCODING => 'utf8', %{$params->{tt_param}||{}} } );
     $params->{stash}->{NEED_TEXT} = 0;
     $params->{stash}->{NEED_SUBJECT} = 1;
 	$tt->process( $params->{tname}, { stash => $params->{stash} }, \$params->{subject} ) || die( $tt->error );

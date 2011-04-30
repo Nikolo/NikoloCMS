@@ -33,7 +33,7 @@ sub startup {
 	$self->log->error( "Error while init model: ".$@ ) if $@;
 	$self->log->error( "Model not initialized " ) unless $self->{model};
 	eval {
-		$self->{session} = MojoX::Session->new(
+		$self->{Xsession} = MojoX::Session->new(
         	store		=> MojoX::Session::Store::Dbi->new( dbh  => $self->{model}->storage->dbh ),
         	transport	=> MojoX::Session::Transport::Cookie->new,
 			expires_delta   => 60*60*24*30,
@@ -87,10 +87,9 @@ sub startup {
 			return 1;
 		}
 	});
-warn "skhdgflasjfhalsjfhlk";
 	my $bridges = nikolo::Bridges::get();
     foreach( @$bridges ){
-    	$r = $r->bridge->to( controller => $_->{module_name}, action => $_->{name} );
+    	$r = $r->bridge()->to( controller => $_->{module_name}, action => $_->{name} );
     }
 
     # Default route

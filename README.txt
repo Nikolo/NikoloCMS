@@ -13,7 +13,27 @@ MIME::Lite
 Plack::Handler::Apache2
 
 Запуск в режиме PSGI:
+hypnotoad --config /usr/local/www/NikoloCMS/bin/hypnotoad.conf /usr/local/www/NikoloCMS/bin/nikolo.psgi
 starman -R PATH_TO_NikoloCMS/lib/,PATH_TO_NikoloCMS/templates/ nikolo.psgi
+
+Nginx:
+upstream backendurl {
+        server 0:5000;
+}
+server {
+        listen       80;
+        server_name  poscheck.ru;
+        access_log   /var/log/nginx-posckeck-access.log;
+        error_log    /var/log/nginx-posckeck-error.log;
+        root         /usr/local/www/NikoloCMS;
+        location / {
+                proxy_read_timeout 300;
+                proxy_set_header Host $http_host;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_pass       http://backendurl;
+        }
+}
+
 
 Запуск в режиме CGI:
 <VirtualHost *:80>
@@ -33,3 +53,4 @@ starman -R PATH_TO_NikoloCMS/lib/,PATH_TO_NikoloCMS/templates/ nikolo.psgi
         AddHandler cgi-script .cgi
     </Location>
 </VirtualHost>
+
