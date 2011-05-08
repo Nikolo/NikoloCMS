@@ -2,7 +2,7 @@
 
 use strict;
 use lib 'lib';
-use Utils::nikolo qw(rebuild_module restore);
+use Utils::nikolo qw(rebuild_module restore generate_bridges);
 use Model::Schema;
 use Config::JSON;
 use utf8;
@@ -39,3 +39,4 @@ foreach my $mn ( @$module_list ){
     my $res = rebuild_module( $config->get( 'path' ), $mn->module_name, $module_pages );
     printf "Res: %s".$/, $res||"OK";
 }
+generate_bridges( $dbh, $config->get( 'path' ));

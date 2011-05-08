@@ -1,5 +1,5 @@
 
-Необходимые для работы модули:
+РќРµРѕР±С…РѕРґРёРјС‹Рµ РґР»СЏ СЂР°Р±РѕС‚С‹ РјРѕРґСѓР»Рё:
 Template
 DBIx::Class
 Config::JSON
@@ -9,10 +9,10 @@ MojoX::Session
 Data::UUID
 MIME::Lite
 
-Необходимые модули для PSGI
+РќРµРѕР±С…РѕРґРёРјС‹Рµ РјРѕРґСѓР»Рё РґР»СЏ PSGI
 Plack::Handler::Apache2
 
-Запуск в режиме PSGI:
+Р—Р°РїСѓСЃРє РІ СЂРµР¶РёРјРµ PSGI:
 hypnotoad --config /usr/local/www/NikoloCMS/bin/hypnotoad.conf /usr/local/www/NikoloCMS/bin/nikolo.psgi
 starman -R PATH_TO_NikoloCMS/lib/,PATH_TO_NikoloCMS/templates/ nikolo.psgi
 
@@ -35,7 +35,7 @@ server {
 }
 
 
-Запуск в режиме CGI:
+Р—Р°РїСѓСЃРє РІ СЂРµР¶РёРјРµ CGI:
 <VirtualHost *:80>
     ServerAdmin e@mail.ru
     DocumentRoot "PATH_TO_NikoloCMS"
@@ -54,3 +54,6 @@ server {
     </Location>
 </VirtualHost>
 
+
+
+GRANT ALL ON nikolo.* TO nikolo IDENTIFIED BY 'pass';
